@@ -1,8 +1,8 @@
 {
-  "name": "opencomply",
+  "name": "quicktrust",
   "version": "0.1.0",
   "private": true,
-  "description": "Open-source, agent-first GRC platform",
+  "description": "Open-source, agent-first GRC platform — fast, affordable compliance automation",
   "scripts": {
     "dev": "docker compose up",
     "dev:frontend": "pnpm --filter frontend dev",

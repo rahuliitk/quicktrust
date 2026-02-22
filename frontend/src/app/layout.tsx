@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "OpenComply - GRC Platform",
+  title: "QuickTrust - GRC Platform",
   description: "Open-source, agent-first GRC platform",
 };
 

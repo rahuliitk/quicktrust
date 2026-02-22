@@ -88,7 +88,7 @@ class KeycloakService:
                 url,
                 data={
                     "grant_type": "password",
-                    "client_id": "opencomply-web",
+                    "client_id": "quicktrust-web",
                     "username": username,
                     "password": password,
                 },

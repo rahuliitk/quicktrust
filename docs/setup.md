@@ -1,4 +1,4 @@
-# OpenComply — Local Development Setup
+# QuickTrust — Local Development Setup
 
 ## Prerequisites
 
@@ -61,8 +61,8 @@ This loads:
 
 | Email | Password | Role |
 |-------|----------|------|
-| admin@opencomply.dev | admin123 | super_admin |
-| manager@opencomply.dev | manager123 | compliance_manager |
+| admin@quicktrust.dev | admin123 | super_admin |
+| manager@quicktrust.dev | manager123 | compliance_manager |
 
 ## Local Development (without Docker)
 

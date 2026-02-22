@@ -1,8 +1,8 @@
-# OpenComply Architecture
+# QuickTrust Architecture
 
 ## Overview
 
-OpenComply is an open-source, agent-first GRC (Governance, Risk, and Compliance) platform. It uses AI agents to automate compliance workflows that traditionally require expensive tools like Vanta or Drata.
+QuickTrust is an open-source, agent-first GRC (Governance, Risk, and Compliance) platform. It uses AI agents to automate compliance workflows that traditionally require expensive tools like Vanta or Drata.
 
 ## Tech Stack
 
