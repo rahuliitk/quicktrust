@@ -1,0 +1,18 @@
+{
+  "name": "opencomply",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source, agent-first GRC platform",
+  "scripts": {
+    "dev": "docker compose up",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "docker compose up api",
+    "build": "pnpm --filter frontend build",
+    "lint": "pnpm --filter frontend lint",
+    "seed": "docker compose exec api python -m seeds.run_seeds"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}

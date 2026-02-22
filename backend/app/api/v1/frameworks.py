@@ -1,0 +1,49 @@
+from uuid import UUID
+
+from fastapi import APIRouter
+
+from app.core.dependencies import DB
+from app.schemas.framework import (
+    DomainDetailResponse,
+    FrameworkDetailResponse,
+    FrameworkDomainResponse,
+    FrameworkRequirementResponse,
+    FrameworkResponse,
+    RequirementDetailResponse,
+)
+from app.services import framework_service
+
+router = APIRouter(prefix="/frameworks", tags=["frameworks"])
+
+
+@router.get("", response_model=list[FrameworkResponse])
+async def list_frameworks(db: DB):
+    return await framework_service.list_frameworks(db)
+
+
+@router.get("/{framework_id}", response_model=FrameworkDetailResponse)
+async def get_framework(framework_id: UUID, db: DB):
+    return await framework_service.get_framework(db, framework_id)
+
+
+@router.get("/{framework_id}/domains", response_model=list[FrameworkDomainResponse])
+async def get_domains(framework_id: UUID, db: DB):
+    return await framework_service.get_framework_domains(db, framework_id)
+
+
+@router.get("/{framework_id}/domains/{domain_id}", response_model=DomainDetailResponse)
+async def get_domain(framework_id: UUID, domain_id: UUID, db: DB):
+    return await framework_service.get_domain(db, domain_id)
+
+
+@router.get("/{framework_id}/requirements", response_model=list[FrameworkRequirementResponse])
+async def get_requirements(framework_id: UUID, db: DB):
+    return await framework_service.get_requirements(db, framework_id)
+
+
+@router.get(
+    "/{framework_id}/requirements/{requirement_id}",
+    response_model=RequirementDetailResponse,
+)
+async def get_requirement(framework_id: UUID, requirement_id: UUID, db: DB):
+    return await framework_service.get_requirement(db, requirement_id)
