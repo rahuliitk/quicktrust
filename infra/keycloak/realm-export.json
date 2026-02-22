@@ -1,5 +1,5 @@
 {
-  "realm": "opencomply",
+  "realm": "quicktrust",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
@@ -34,8 +34,8 @@
   },
   "clients": [
     {
-      "clientId": "opencomply-web",
-      "name": "OpenComply Web App",
+      "clientId": "quicktrust-web",
+      "name": "QuickTrust Web App",
       "enabled": true,
       "publicClient": true,
       "directAccessGrantsEnabled": false,
@@ -59,11 +59,11 @@
       ]
     },
     {
-      "clientId": "opencomply-api",
-      "name": "OpenComply API",
+      "clientId": "quicktrust-api",
+      "name": "QuickTrust API",
       "enabled": true,
       "publicClient": false,
-      "secret": "opencomply-api-secret",
+      "secret": "quicktrust-api-secret",
       "directAccessGrantsEnabled": true,
       "standardFlowEnabled": false,
       "serviceAccountsEnabled": true,
@@ -78,8 +78,8 @@
   ],
   "users": [
     {
-      "username": "admin@opencomply.dev",
-      "email": "admin@opencomply.dev",
+      "username": "admin@quicktrust.dev",
+      "email": "admin@quicktrust.dev",
       "firstName": "Admin",
       "lastName": "User",
       "enabled": true,
@@ -96,8 +96,8 @@
       ]
     },
     {
-      "username": "manager@opencomply.dev",
-      "email": "manager@opencomply.dev",
+      "username": "manager@quicktrust.dev",
+      "email": "manager@quicktrust.dev",
       "firstName": "Compliance",
       "lastName": "Manager",
       "enabled": true,
@@ -140,7 +140,7 @@
   ],
   "scopeMappings": [
     {
-      "client": "opencomply-web",
+      "client": "quicktrust-web",
       "roles": [
         "super_admin",
         "compliance_manager",

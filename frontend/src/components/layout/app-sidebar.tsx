@@ -27,7 +27,7 @@ export function AppSidebar() {
       <div className="flex h-14 items-center border-b px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
           <Shield className="h-6 w-6 text-primary" />
-          <span>OpenComply</span>
+          <span>QuickTrust</span>
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-4">
@@ -51,7 +51,7 @@ export function AppSidebar() {
         })}
       </nav>
       <div className="border-t p-4 text-xs text-muted-foreground">
-        OpenComply v0.1.0
+        QuickTrust v0.1.0
       </div>
     </aside>
   );

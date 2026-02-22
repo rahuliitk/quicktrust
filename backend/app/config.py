@@ -4,29 +4,29 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # App
-    APP_NAME: str = "OpenComply"
+    APP_NAME: str = "QuickTrust"
     APP_ENV: str = "development"
     LOG_LEVEL: str = "INFO"
     SECRET_KEY: str = "change-me-in-production"
     CORS_ORIGINS: str = "http://localhost:3000"
 
     # Database — defaults to SQLite for local dev, use postgresql+asyncpg://... for production
-    DATABASE_URL: str = "sqlite+aiosqlite:///./opencomply.db"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./quicktrust.db"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # Keycloak
     KEYCLOAK_URL: str = "http://localhost:8080"
-    KEYCLOAK_REALM: str = "opencomply"
-    KEYCLOAK_CLIENT_ID: str = "opencomply-api"
-    KEYCLOAK_CLIENT_SECRET: str = "opencomply-api-secret"
+    KEYCLOAK_REALM: str = "quicktrust"
+    KEYCLOAK_CLIENT_ID: str = "quicktrust-api"
+    KEYCLOAK_CLIENT_SECRET: str = "quicktrust-api-secret"
 
     # MinIO
     MINIO_URL: str = "http://localhost:9000"
-    MINIO_ROOT_USER: str = "opencomply"
-    MINIO_ROOT_PASSWORD: str = "opencomply_dev"
-    MINIO_BUCKET: str = "opencomply-evidence"
+    MINIO_ROOT_USER: str = "quicktrust"
+    MINIO_ROOT_PASSWORD: str = "quicktrust_dev"
+    MINIO_BUCKET: str = "quicktrust-evidence"
 
     # LiteLLM
     LITELLM_MODEL: str = "gpt-4o-mini"

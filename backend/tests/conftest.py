@@ -45,7 +45,7 @@ def make_test_user() -> User:
         id=uuid.uuid4(),
         org_id=uuid.uuid4(),
         keycloak_id="test-keycloak-id",
-        email="test@opencomply.dev",
+        email="test@quicktrust.dev",
         full_name="Test User",
         role="super_admin",
         is_active=True,

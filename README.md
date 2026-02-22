@@ -1,47 +1,60 @@
-# OpenComply
+# QuickTrust
 
-Open-source, agent-first GRC (Governance, Risk, and Compliance) platform.
+**Open-source, agent-first GRC platform that makes compliance fast, affordable, and automated.**
 
-## What is OpenComply?
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-OpenComply automates compliance workflows using AI agents. Instead of manually mapping controls, collecting evidence, and tracking compliance status, OpenComply uses LLM-powered agents to:
+## Why QuickTrust?
 
-- **Generate controls** from compliance frameworks (SOC 2, ISO 27001, etc.)
-- **Customize controls** to your specific tech stack and company context
-- **Map controls** to framework requirements automatically
-- **Suggest owners** based on your organizational structure
+Compliance tools like Vanta and Drata charge $20,000–$100,000+/year, putting SOC 2, ISO 27001, and other certifications out of reach for startups and SMBs. QuickTrust changes that.
+
+QuickTrust uses **AI agents** to automate the most time-consuming parts of compliance — generating controls, mapping them to framework requirements, customizing them to your tech stack, and suggesting owners — reducing weeks of manual work to minutes.
+
+### Goals
+
+- **Democratize compliance**: Make enterprise-grade GRC tooling accessible to every company, regardless of budget
+- **Agent-first architecture**: Use LLM-powered agents to automate control generation, evidence collection, and gap analysis — not just dashboards and checklists
+- **Open-source transparency**: Compliance is about trust. Your compliance tooling should be auditable, extensible, and community-driven
+- **Framework-agnostic**: Support SOC 2, ISO 27001, HIPAA, PCI DSS, and any custom framework through a pluggable framework engine
 
 ## Features
 
-- Full SOC 2 Type II framework with 9 domains and 33 requirements
-- 25 pre-built control templates across 8 security domains
-- 20 evidence templates for automated evidence collection
-- AI-powered controls generation agent (LangGraph + LiteLLM)
-- Multi-tenant architecture with Keycloak SSO
-- Modern dashboard with compliance scoring
-- RESTful API with full Swagger documentation
+- **SOC 2 Type II** framework with 9 domains, 33 requirements, and control objectives — fully seeded and ready to use
+- **25 control templates** across 8 security domains (Access Control, Network Security, Data Protection, Change Management, Logging & Monitoring, Incident Response, Endpoint Security, HR Security)
+- **20 evidence templates** for structured evidence collection
+- **AI controls generation agent** — give it your company context and framework, get tailored draft controls in minutes (LangGraph + LiteLLM)
+- **Multi-tenant architecture** with Keycloak SSO (OIDC/PKCE)
+- **Compliance dashboard** with scoring, status tracking, and framework progress
+- **Full REST API** with Swagger documentation
 
 ## Quick Start
 
+### Local Development (no Docker required)
+
 ```bash
-# Clone the repository
-git clone <repo-url> opencomply
-cd opencomply
+# Clone
+git clone https://github.com/rahuliitk/quicktrust.git
+cd quicktrust
 
-# Copy environment configuration
+# Backend
+cd backend
+pip install -e ".[dev]"
+python seeds/run_seeds.py        # Seed SOC 2 framework + templates
+uvicorn app.main:app --reload    # API at http://localhost:8000
+
+# Frontend (new terminal)
+cd frontend
+pnpm install
+pnpm dev                         # UI at http://localhost:3000
+```
+
+### Docker Compose (full stack)
+
+```bash
 cp .env.example .env
-
-# Start all services
 docker compose up -d
-
-# Run database migrations
-docker compose exec api alembic upgrade head
-
-# Seed compliance data
 docker compose exec api python -m seeds.run_seeds
-
-# Open the app
-open http://localhost:3000
+# App at http://localhost:3000, API at http://localhost:8000, Swagger at http://localhost:8000/docs
 ```
 
 See [docs/setup.md](docs/setup.md) for detailed setup instructions.
@@ -50,11 +63,11 @@ See [docs/setup.md](docs/setup.md) for detailed setup instructions.
 
 | Component | Technology |
 |-----------|-----------|
-| Frontend | Next.js 15, React 19, shadcn/ui |
-| Backend | FastAPI, Python 3.12, SQLAlchemy 2.0 |
-| Database | PostgreSQL 16 + pgvector |
+| Frontend | Next.js 15, React 19, shadcn/ui, TanStack Query |
+| Backend | FastAPI, Python 3.12, SQLAlchemy 2.0 (async) |
+| Database | PostgreSQL 16 + pgvector (SQLite for local dev) |
 | Auth | Keycloak 26 (OIDC/PKCE) |
-| AI Agent | LangGraph + LiteLLM |
+| AI Agent | LangGraph + LiteLLM (any LLM provider) |
 | Infrastructure | Docker Compose, Traefik, Redis, MinIO |
 
 See [docs/architecture.md](docs/architecture.md) for the full architecture overview.
@@ -62,43 +75,36 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture overv
 ## Project Structure
 
 ```
-opencomply/
-  backend/          # FastAPI backend (Python)
-  frontend/         # Next.js frontend (TypeScript)
-  infra/            # Keycloak, PostgreSQL, Traefik configs
-  docs/             # Documentation
+quicktrust/
+  backend/          # FastAPI API, models, services, agents, seeds
+  frontend/         # Next.js UI with shadcn/ui components
+  infra/            # Keycloak realm, PostgreSQL init, Traefik config
+  docs/             # Setup guide, architecture docs
   docker-compose.yml
 ```
 
-## Development
+## Roadmap
 
-### Backend
-
-```bash
-cd backend
-pip install -e ".[dev]"
-uvicorn app.main:app --reload
-```
-
-### Frontend
-
-```bash
-cd frontend
-pnpm install
-pnpm dev
-```
-
-### Tests
-
-```bash
-cd backend
-pytest -v
-```
+- [ ] ISO 27001 framework support
+- [ ] HIPAA framework support
+- [ ] Evidence auto-collection via integrations (AWS, GitHub, Okta, etc.)
+- [ ] Risk register and risk assessment workflows
+- [ ] Audit preparation and auditor portal
+- [ ] Policy document management
+- [ ] Continuous monitoring with real-time compliance scoring
+- [ ] Self-hosted deployment guides (Kubernetes, single VM)
 
 ## Contributing
 
-Contributions are welcome. Please open an issue first to discuss what you would like to change.
+Contributions are welcome! Whether it's adding a new compliance framework, improving the AI agent, or fixing a bug — we'd love your help.
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes
+4. Push and open a PR
+
+Please open an issue first for large changes to discuss the approach.
 
 ## License
 
-[AGPLv3](LICENSE)
+[GNU Affero General Public License v3.0](LICENSE) — you can use, modify, and distribute QuickTrust freely. If you host it as a service, you must share your modifications. This ensures the project stays open and benefits the community.

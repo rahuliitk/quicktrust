@@ -18,7 +18,7 @@ async def main():
 
     async with async_session() as db:
         print("=" * 50)
-        print("OpenComply Seed Runner")
+        print("QuickTrust Seed Runner")
         print("=" * 50)
 
         # 1. Seed SOC 2 Framework
