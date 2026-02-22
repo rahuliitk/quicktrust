@@ -1,0 +1,153 @@
+{
+  "realm": "opencomply",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "super_admin",
+        "description": "Full system access"
+      },
+      {
+        "name": "compliance_manager",
+        "description": "Manage compliance programs and controls"
+      },
+      {
+        "name": "control_owner",
+        "description": "Own and manage assigned controls"
+      },
+      {
+        "name": "employee",
+        "description": "Basic access for policy acknowledgment"
+      },
+      {
+        "name": "auditor",
+        "description": "Read-only access for audit purposes"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "opencomply-web",
+      "name": "OpenComply Web App",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ]
+    },
+    {
+      "clientId": "opencomply-api",
+      "name": "OpenComply API",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "opencomply-api-secret",
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@opencomply.dev",
+      "email": "admin@opencomply.dev",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "super_admin"
+      ]
+    },
+    {
+      "username": "manager@opencomply.dev",
+      "email": "manager@opencomply.dev",
+      "firstName": "Compliance",
+      "lastName": "Manager",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "manager123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "compliance_manager"
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "roles",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "multivalued": "true",
+            "claim.name": "realm_roles",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "scopeMappings": [
+    {
+      "client": "opencomply-web",
+      "roles": [
+        "super_admin",
+        "compliance_manager",
+        "control_owner",
+        "employee",
+        "auditor"
+      ]
+    }
+  ]
+}
