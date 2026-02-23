@@ -26,6 +26,32 @@ class ControlUpdate(BaseModel):
     test_procedure: str | None = None
 
 
+class ControlFrameworkMappingResponse(BaseModel):
+    id: UUID
+    control_id: UUID
+    framework_id: UUID
+    requirement_id: UUID | None
+    objective_id: UUID | None
+    framework_name: str | None = None
+    requirement_code: str | None = None
+    requirement_title: str | None = None
+
+    model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_mapping(cls, mapping) -> "ControlFrameworkMappingResponse":
+        return cls(
+            id=mapping.id,
+            control_id=mapping.control_id,
+            framework_id=mapping.framework_id,
+            requirement_id=mapping.requirement_id,
+            objective_id=mapping.objective_id,
+            framework_name=mapping.framework.name if mapping.framework else None,
+            requirement_code=mapping.requirement.code if mapping.requirement else None,
+            requirement_title=mapping.requirement.title if mapping.requirement else None,
+        )
+
+
 class ControlResponse(BaseModel):
     id: UUID
     org_id: UUID
@@ -41,6 +67,7 @@ class ControlResponse(BaseModel):
     last_test_date: datetime | None
     last_test_result: str | None
     agent_run_id: UUID | None
+    framework_mappings: list[ControlFrameworkMappingResponse] = []
     created_at: datetime
     updated_at: datetime
 

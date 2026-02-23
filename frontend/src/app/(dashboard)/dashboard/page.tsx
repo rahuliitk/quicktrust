@@ -3,9 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useControlStats, useFrameworks, useAgentRuns } from "@/hooks/use-api";
+import { useControlStats, useFrameworks, useAgentRuns, usePolicyStats } from "@/hooks/use-api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, ListChecks, Bot, CheckCircle } from "lucide-react";
+import { Shield, ListChecks, Bot, CheckCircle, FileText } from "lucide-react";
 
 // Hardcoded org ID for demo — in production, this comes from auth context
 const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const { data: stats, isLoading: statsLoading } = useControlStats(DEMO_ORG_ID);
   const { data: frameworks, isLoading: fwLoading } = useFrameworks();
   const { data: agentRuns, isLoading: runsLoading } = useAgentRuns(DEMO_ORG_ID);
+  const { data: policyStats, isLoading: policyLoading } = usePolicyStats(DEMO_ORG_ID);
 
   const complianceScore = stats
     ? stats.total > 0
@@ -29,7 +30,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Top-level stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
@@ -72,6 +73,21 @@ export default function DashboardPage() {
             ) : (
               <div className="text-2xl font-bold">{frameworks?.length || 0}</div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Policies</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {policyLoading ? (
+              <Skeleton className="h-8 w-8" />
+            ) : (
+              <div className="text-2xl font-bold">{policyStats?.published || 0}</div>
+            )}
+            <p className="text-xs text-muted-foreground">published</p>
           </CardContent>
         </Card>
 

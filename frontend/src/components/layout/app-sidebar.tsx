@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Shield,
   ListChecks,
+  FileText,
   FileStack,
   Bot,
 } from "lucide-react";
@@ -15,6 +16,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/frameworks", label: "Frameworks", icon: Shield },
   { href: "/controls", label: "Controls", icon: ListChecks },
+  { href: "/policies", label: "Policies", icon: FileText },
   { href: "/control-templates", label: "Templates", icon: FileStack },
   { href: "/agents/controls-generation", label: "AI Agents", icon: Bot },
 ];

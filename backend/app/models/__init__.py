@@ -14,6 +14,8 @@ from app.models.control_framework_mapping import ControlFrameworkMapping
 from app.models.evidence import Evidence
 from app.models.agent_run import AgentRun
 from app.models.audit_log import AuditLog
+from app.models.policy_template import PolicyTemplate
+from app.models.policy import Policy
 
 __all__ = [
     "BaseModel",
@@ -32,4 +34,6 @@ __all__ = [
     "Evidence",
     "AgentRun",
     "AuditLog",
+    "PolicyTemplate",
+    "Policy",
 ]

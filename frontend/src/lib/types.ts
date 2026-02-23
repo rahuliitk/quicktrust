@@ -107,6 +107,7 @@ export interface Control {
   last_test_date: string | null;
   last_test_result: string | null;
   agent_run_id: string | null;
+  framework_mappings?: ControlFrameworkMapping[];
   created_at: string;
   updated_at: string;
 }
@@ -191,4 +192,70 @@ export interface UserInfo {
   full_name: string;
   role: string;
   org_id: string | null;
+}
+
+// Policies
+
+export type PolicyStatus =
+  | "draft"
+  | "in_review"
+  | "approved"
+  | "published"
+  | "archived";
+
+export interface Policy {
+  id: string;
+  org_id: string;
+  template_id: string | null;
+  title: string;
+  content: string | null;
+  version: string;
+  status: PolicyStatus;
+  owner_id: string | null;
+  approved_by_id: string | null;
+  approved_at: string | null;
+  published_at: string | null;
+  next_review_date: string | null;
+  framework_ids: string[] | null;
+  control_ids: string[] | null;
+  agent_run_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PolicyStats {
+  total: number;
+  draft: number;
+  in_review: number;
+  approved: number;
+  published: number;
+  archived: number;
+}
+
+export interface PolicyTemplate {
+  id: string;
+  template_code: string;
+  title: string;
+  description: string | null;
+  category: string;
+  sections: string[] | null;
+  variables: string[] | null;
+  content_template: string | null;
+  required_by_frameworks: string[] | null;
+  review_frequency: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Control Framework Mapping (for control detail page)
+
+export interface ControlFrameworkMapping {
+  id: string;
+  control_id: string;
+  framework_id: string;
+  requirement_id: string | null;
+  objective_id: string | null;
+  framework_name: string | null;
+  requirement_code: string | null;
+  requirement_title: string | null;
 }

@@ -8,10 +8,22 @@ from app.schemas.control import (
     BulkApproveRequest,
     ControlCreate,
     ControlResponse,
+    ControlFrameworkMappingResponse,
     ControlStatsResponse,
     ControlUpdate,
 )
 from app.services import control_service
+
+
+def _serialize_control(control) -> ControlResponse:
+    """Serialize a Control ORM object with nested framework mapping details."""
+    mappings = [
+        ControlFrameworkMappingResponse.from_mapping(m)
+        for m in (control.framework_mappings or [])
+    ]
+    resp = ControlResponse.model_validate(control)
+    resp.framework_mappings = mappings
+    return resp
 
 router = APIRouter(prefix="/organizations/{org_id}/controls", tags=["controls"])
 
@@ -30,7 +42,7 @@ async def list_controls(
         db, org_id, status=status, framework_id=framework_id, page=page, page_size=page_size
     )
     return PaginatedResponse(
-        items=[ControlResponse.model_validate(c) for c in controls],
+        items=[_serialize_control(c) for c in controls],
         total=total,
         page=page,
         page_size=page_size,
@@ -50,7 +62,8 @@ async def get_stats(org_id: UUID, db: DB, current_user: CurrentUser):
 
 @router.get("/{control_id}", response_model=ControlResponse)
 async def get_control(org_id: UUID, control_id: UUID, db: DB, current_user: CurrentUser):
-    return await control_service.get_control(db, org_id, control_id)
+    control = await control_service.get_control(db, org_id, control_id)
+    return _serialize_control(control)
 
 
 @router.patch("/{control_id}", response_model=ControlResponse)
