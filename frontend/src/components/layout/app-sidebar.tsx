@@ -9,14 +9,24 @@ import {
   ListChecks,
   FileText,
   FileStack,
+  FileCheck,
   Bot,
+  AlertTriangle,
+  Plug,
+  ClipboardCheck,
+  Rocket,
 } from "lucide-react";
 
 const navItems = [
+  { href: "/onboarding", label: "Quick Start", icon: Rocket },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/frameworks", label: "Frameworks", icon: Shield },
   { href: "/controls", label: "Controls", icon: ListChecks },
+  { href: "/evidence", label: "Evidence", icon: FileCheck },
   { href: "/policies", label: "Policies", icon: FileText },
+  { href: "/risks", label: "Risk Register", icon: AlertTriangle },
+  { href: "/integrations", label: "Integrations", icon: Plug },
+  { href: "/audits", label: "Audits", icon: ClipboardCheck },
   { href: "/control-templates", label: "Templates", icon: FileStack },
   { href: "/agents/controls-generation", label: "AI Agents", icon: Bot },
 ];
@@ -53,7 +63,7 @@ export function AppSidebar() {
         })}
       </nav>
       <div className="border-t p-4 text-xs text-muted-foreground">
-        QuickTrust v0.1.0
+        QuickTrust v0.2.0
       </div>
     </aside>
   );

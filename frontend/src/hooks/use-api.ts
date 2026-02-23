@@ -16,6 +16,18 @@ import type {
   PolicyStats,
   PolicyTemplate,
   PaginatedResponse,
+  Risk,
+  RiskStats,
+  RiskMatrixResponse,
+  Integration,
+  CollectionJob,
+  ProviderInfo,
+  Audit,
+  AuditFinding,
+  AuditorAccessToken,
+  ReadinessScore,
+  OnboardingSession,
+  OnboardingWizardInput,
 } from "@/lib/types";
 
 // Frameworks
@@ -267,6 +279,305 @@ export function useOrganization(orgId: string) {
   return useQuery({
     queryKey: ["organizations", orgId],
     queryFn: () => api.get<Organization>(`/organizations/${orgId}`),
+    enabled: !!orgId,
+  });
+}
+
+// ===== Risk Register =====
+
+export function useRisks(orgId: string, params?: { status?: string; risk_level?: string; category?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.risk_level) searchParams.set("risk_level", params.risk_level);
+  if (params?.category) searchParams.set("category", params.category);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["risks", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<Risk>>(
+        `/organizations/${orgId}/risks${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useRisk(orgId: string, riskId: string) {
+  return useQuery({
+    queryKey: ["risks", orgId, riskId],
+    queryFn: () => api.get<Risk>(`/organizations/${orgId}/risks/${riskId}`),
+    enabled: !!orgId && !!riskId,
+  });
+}
+
+export function useRiskStats(orgId: string) {
+  return useQuery({
+    queryKey: ["risk-stats", orgId],
+    queryFn: () => api.get<RiskStats>(`/organizations/${orgId}/risks/stats`),
+    enabled: !!orgId,
+  });
+}
+
+export function useRiskMatrix(orgId: string) {
+  return useQuery({
+    queryKey: ["risk-matrix", orgId],
+    queryFn: () => api.get<RiskMatrixResponse>(`/organizations/${orgId}/risks/matrix`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateRisk(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Risk>) =>
+      api.post<Risk>(`/organizations/${orgId}/risks`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["risks", orgId] });
+      qc.invalidateQueries({ queryKey: ["risk-stats", orgId] });
+      qc.invalidateQueries({ queryKey: ["risk-matrix", orgId] });
+    },
+  });
+}
+
+export function useUpdateRisk(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ riskId, ...data }: { riskId: string } & Partial<Risk>) =>
+      api.patch<Risk>(`/organizations/${orgId}/risks/${riskId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["risks", orgId] });
+      qc.invalidateQueries({ queryKey: ["risk-stats", orgId] });
+      qc.invalidateQueries({ queryKey: ["risk-matrix", orgId] });
+    },
+  });
+}
+
+export function useDeleteRisk(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (riskId: string) =>
+      api.delete(`/organizations/${orgId}/risks/${riskId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["risks", orgId] });
+      qc.invalidateQueries({ queryKey: ["risk-stats", orgId] });
+      qc.invalidateQueries({ queryKey: ["risk-matrix", orgId] });
+    },
+  });
+}
+
+// ===== Integrations =====
+
+export function useIntegrations(orgId: string, params?: { page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["integrations", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<Integration>>(
+        `/organizations/${orgId}/integrations${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useIntegration(orgId: string, integrationId: string) {
+  return useQuery({
+    queryKey: ["integrations", orgId, integrationId],
+    queryFn: () =>
+      api.get<Integration>(`/organizations/${orgId}/integrations/${integrationId}`),
+    enabled: !!orgId && !!integrationId,
+  });
+}
+
+export function useProviders(orgId: string) {
+  return useQuery({
+    queryKey: ["providers", orgId],
+    queryFn: () =>
+      api.get<ProviderInfo[]>(`/organizations/${orgId}/integrations/providers`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateIntegration(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { provider: string; name: string; config?: Record<string, unknown> }) =>
+      api.post<Integration>(`/organizations/${orgId}/integrations`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["integrations", orgId] });
+    },
+  });
+}
+
+export function useTriggerCollection(orgId: string, integrationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { collector_type: string; evidence_template_id?: string; control_id?: string }) =>
+      api.post<CollectionJob>(
+        `/organizations/${orgId}/integrations/${integrationId}/collect`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["collection-jobs", orgId, integrationId] });
+      qc.invalidateQueries({ queryKey: ["evidence", orgId] });
+    },
+  });
+}
+
+export function useCollectionJobs(orgId: string, integrationId: string) {
+  return useQuery({
+    queryKey: ["collection-jobs", orgId, integrationId],
+    queryFn: () =>
+      api.get<PaginatedResponse<CollectionJob>>(
+        `/organizations/${orgId}/integrations/${integrationId}/jobs`
+      ),
+    enabled: !!orgId && !!integrationId,
+  });
+}
+
+// ===== Audits =====
+
+export function useAudits(orgId: string, params?: { page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["audits", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<Audit>>(
+        `/organizations/${orgId}/audits${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useAudit(orgId: string, auditId: string) {
+  return useQuery({
+    queryKey: ["audits", orgId, auditId],
+    queryFn: () => api.get<Audit>(`/organizations/${orgId}/audits/${auditId}`),
+    enabled: !!orgId && !!auditId,
+  });
+}
+
+export function useReadinessScore(orgId: string) {
+  return useQuery({
+    queryKey: ["readiness", orgId],
+    queryFn: () => api.get<ReadinessScore>(`/organizations/${orgId}/audits/readiness`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateAudit(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; framework_id?: string; audit_type?: string; auditor_firm?: string }) =>
+      api.post<Audit>(`/organizations/${orgId}/audits`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["audits", orgId] });
+    },
+  });
+}
+
+export function useAuditFindings(orgId: string, auditId: string) {
+  return useQuery({
+    queryKey: ["audit-findings", orgId, auditId],
+    queryFn: () =>
+      api.get<AuditFinding[]>(`/organizations/${orgId}/audits/${auditId}/findings`),
+    enabled: !!orgId && !!auditId,
+  });
+}
+
+export function useAuditTokens(orgId: string, auditId: string) {
+  return useQuery({
+    queryKey: ["audit-tokens", orgId, auditId],
+    queryFn: () =>
+      api.get<AuditorAccessToken[]>(`/organizations/${orgId}/audits/${auditId}/tokens`),
+    enabled: !!orgId && !!auditId,
+  });
+}
+
+export function useUpdateAudit(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ auditId, ...data }: { auditId: string; title?: string; status?: string; auditor_firm?: string; lead_auditor_name?: string }) =>
+      api.patch<Audit>(`/organizations/${orgId}/audits/${auditId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["audits", orgId] });
+    },
+  });
+}
+
+export function useCreateFinding(orgId: string, auditId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; description?: string; severity?: string; control_id?: string }) =>
+      api.post<AuditFinding>(`/organizations/${orgId}/audits/${auditId}/findings`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["audit-findings", orgId, auditId] });
+    },
+  });
+}
+
+export function useCreateToken(orgId: string, auditId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { auditor_email: string; auditor_name?: string; expires_in_days?: number }) =>
+      api.post<AuditorAccessToken>(`/organizations/${orgId}/audits/${auditId}/tokens`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["audit-tokens", orgId, auditId] });
+    },
+  });
+}
+
+export function useRevokeToken(orgId: string, auditId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (tokenId: string) =>
+      api.delete(`/organizations/${orgId}/audits/${auditId}/tokens/${tokenId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["audit-tokens", orgId, auditId] });
+    },
+  });
+}
+
+// ===== Onboarding =====
+
+export function useStartOnboarding(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: OnboardingWizardInput) =>
+      api.post<OnboardingSession>(`/organizations/${orgId}/onboarding/start`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["onboarding", orgId] });
+    },
+  });
+}
+
+export function useOnboardingStatus(orgId: string, sessionId: string) {
+  return useQuery({
+    queryKey: ["onboarding", orgId, sessionId],
+    queryFn: () =>
+      api.get<OnboardingSession>(
+        `/organizations/${orgId}/onboarding/status/${sessionId}`
+      ),
+    enabled: !!orgId && !!sessionId,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (data && (data.status === "completed" || data.status === "failed")) return false;
+      return 3000;
+    },
+  });
+}
+
+export function useLatestOnboarding(orgId: string) {
+  return useQuery({
+    queryKey: ["onboarding-latest", orgId],
+    queryFn: () =>
+      api.get<OnboardingSession | null>(`/organizations/${orgId}/onboarding/latest`),
     enabled: !!orgId,
   });
 }

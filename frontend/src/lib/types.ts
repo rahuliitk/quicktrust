@@ -259,3 +259,190 @@ export interface ControlFrameworkMapping {
   requirement_code: string | null;
   requirement_title: string | null;
 }
+
+// Risk Register
+
+export type RiskCategory = "operational" | "security" | "compliance" | "financial";
+export type RiskLevel = "critical" | "high" | "medium" | "low";
+export type RiskStatus = "identified" | "assessed" | "treating" | "accepted" | "closed";
+
+export interface Risk {
+  id: string;
+  org_id: string;
+  title: string;
+  description: string | null;
+  category: RiskCategory;
+  likelihood: number;
+  impact: number;
+  risk_score: number;
+  risk_level: RiskLevel;
+  status: RiskStatus;
+  treatment_plan: string | null;
+  treatment_type: string | null;
+  treatment_status: string | null;
+  treatment_due_date: string | null;
+  residual_likelihood: number | null;
+  residual_impact: number | null;
+  residual_score: number | null;
+  owner_id: string | null;
+  reviewer_id: string | null;
+  last_review_date: string | null;
+  next_review_date: string | null;
+  control_mappings?: RiskControlMapping[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RiskControlMapping {
+  id: string;
+  risk_id: string;
+  control_id: string;
+  effectiveness: string;
+  notes: string | null;
+}
+
+export interface RiskStats {
+  total: number;
+  by_status: Record<string, number>;
+  by_risk_level: Record<string, number>;
+  average_score: number;
+}
+
+export interface RiskMatrixCell {
+  likelihood: number;
+  impact: number;
+  count: number;
+  risk_ids: string[];
+}
+
+export interface RiskMatrixResponse {
+  cells: RiskMatrixCell[];
+}
+
+// Integrations
+
+export interface Integration {
+  id: string;
+  org_id: string;
+  provider: string;
+  name: string;
+  status: string;
+  config: Record<string, unknown> | null;
+  credentials_ref: string | null;
+  last_sync_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CollectionJob {
+  id: string;
+  org_id: string;
+  integration_id: string;
+  evidence_template_id: string | null;
+  control_id: string | null;
+  status: string;
+  collector_type: string;
+  result_data: Record<string, unknown> | null;
+  evidence_id: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProviderInfo {
+  provider: string;
+  name: string;
+  description: string;
+  collector_types: string[];
+}
+
+// Audits
+
+export type AuditStatus = "planning" | "preparation" | "fieldwork" | "reporting" | "completed" | "closed";
+
+export interface Audit {
+  id: string;
+  org_id: string;
+  title: string;
+  framework_id: string | null;
+  audit_type: string;
+  status: AuditStatus;
+  auditor_firm: string | null;
+  lead_auditor_name: string | null;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  readiness_score: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuditFinding {
+  id: string;
+  audit_id: string;
+  org_id: string;
+  control_id: string | null;
+  title: string;
+  description: string | null;
+  severity: string;
+  status: string;
+  remediation_plan: string | null;
+  remediation_due_date: string | null;
+  remediation_owner_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuditorAccessToken {
+  id: string;
+  audit_id: string;
+  auditor_email: string;
+  auditor_name: string | null;
+  permissions: Record<string, unknown> | null;
+  is_active: boolean;
+  expires_at: string;
+  token?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReadinessScore {
+  overall_score: number;
+  controls_score: number;
+  evidence_score: number;
+  policies_score: number;
+  risks_score: number;
+  controls_implemented: number;
+  controls_total: number;
+  evidence_collected: number;
+  evidence_total: number;
+  policies_published: number;
+  policies_total: number;
+  risks_treated: number;
+  risks_total: number;
+}
+
+// Onboarding
+
+export interface OnboardingWizardInput {
+  company_name: string;
+  industry: string;
+  company_size: string;
+  cloud_providers: string[];
+  tech_stack: string[];
+  departments: string[];
+  target_framework_ids: string[];
+  compliance_timeline?: string;
+  special_requirements?: string;
+}
+
+export interface OnboardingSession {
+  id: string;
+  org_id: string;
+  status: string;
+  input_data: Record<string, unknown> | null;
+  progress: Record<string, unknown> | null;
+  results: Record<string, unknown> | null;
+  agent_run_ids: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}

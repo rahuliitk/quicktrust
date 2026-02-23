@@ -1,4 +1,4 @@
-"""25 control templates mapped to SOC 2 requirements."""
+"""25 control templates mapped to SOC 2 and HIPAA requirements."""
 
 CONTROL_TEMPLATES = [
     # Access Control (7)
@@ -12,6 +12,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {"cloud_provider": "AWS", "identity_provider": "Okta"},
         "requirement_codes": ["CC6.1", "CC6.2"],
+        "hipaa_requirement_codes": ["§164.308(a)(5)", "§164.312(d)"],
     },
     {
         "template_code": "AC-002",
@@ -23,6 +24,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {"identity_provider": "Okta"},
         "requirement_codes": ["CC6.1"],
+        "hipaa_requirement_codes": ["§164.312(d)"],
     },
     {
         "template_code": "AC-003",
@@ -34,6 +36,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "semi_automated",
         "variables": {"cloud_provider": "AWS"},
         "requirement_codes": ["CC6.1", "CC6.2"],
+        "hipaa_requirement_codes": ["§164.308(a)(4)", "§164.312(a)"],
     },
     {
         "template_code": "AC-004",
@@ -45,6 +48,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {},
         "requirement_codes": ["CC6.2", "CC6.3"],
+        "hipaa_requirement_codes": ["§164.308(a)(3)", "§164.308(a)(4)"],
     },
     {
         "template_code": "AC-005",
@@ -56,6 +60,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "semi_automated",
         "variables": {},
         "requirement_codes": ["CC6.3"],
+        "hipaa_requirement_codes": ["§164.308(a)(4)"],
     },
     {
         "template_code": "AC-006",
@@ -67,6 +72,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {},
         "requirement_codes": ["CC6.1"],
+        "hipaa_requirement_codes": ["§164.308(a)(5)"],
     },
     {
         "template_code": "AC-007",
@@ -78,6 +84,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "semi_automated",
         "variables": {},
         "requirement_codes": ["CC6.1", "CC6.2", "CC6.3"],
+        "hipaa_requirement_codes": ["§164.312(a)"],
     },
     # Network Security (2)
     {
@@ -90,6 +97,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {"cloud_provider": "AWS"},
         "requirement_codes": ["CC6.6"],
+        "hipaa_requirement_codes": ["§164.310(a)"],
     },
     {
         "template_code": "NS-002",
@@ -101,6 +109,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {},
         "requirement_codes": ["CC6.7"],
+        "hipaa_requirement_codes": ["§164.312(e)"],
     },
     # Data Protection (3)
     {
@@ -113,6 +122,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {"cloud_provider": "AWS"},
         "requirement_codes": ["CC6.1", "CC6.7"],
+        "hipaa_requirement_codes": ["§164.312(a)", "§164.312(e)"],
     },
     {
         "template_code": "DP-002",
@@ -135,6 +145,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {"cloud_provider": "AWS"},
         "requirement_codes": ["CC7.5"],
+        "hipaa_requirement_codes": ["§164.308(a)(7)", "§164.310(d)"],
     },
     # Change Management (3)
     {
@@ -181,6 +192,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {"cloud_provider": "AWS"},
         "requirement_codes": ["CC7.2"],
+        "hipaa_requirement_codes": ["§164.312(b)"],
     },
     {
         "template_code": "LM-002",
@@ -192,6 +204,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "automated",
         "variables": {},
         "requirement_codes": ["CC7.2", "CC7.3"],
+        "hipaa_requirement_codes": ["§164.308(a)(1)", "§164.308(a)(6)"],
     },
     {
         "template_code": "LM-003",
@@ -226,6 +239,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "manual",
         "variables": {},
         "requirement_codes": ["CC7.3", "CC7.4"],
+        "hipaa_requirement_codes": ["§164.308(a)(6)"],
     },
     {
         "template_code": "IR-002",
@@ -237,6 +251,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "manual",
         "variables": {},
         "requirement_codes": ["CC7.4"],
+        "hipaa_requirement_codes": ["§164.308(a)(6)"],
     },
     # Endpoint Security (2)
     {
@@ -272,6 +287,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "manual",
         "variables": {},
         "requirement_codes": ["CC1.4"],
+        "hipaa_requirement_codes": ["§164.308(a)(3)"],
     },
     {
         "template_code": "HR-002",
@@ -283,6 +299,7 @@ CONTROL_TEMPLATES = [
         "automation_level": "semi_automated",
         "variables": {},
         "requirement_codes": ["CC1.4", "CC2.2"],
+        "hipaa_requirement_codes": ["§164.308(a)(5)"],
     },
 ]
 
@@ -290,6 +307,7 @@ CONTROL_TEMPLATES = [
 async def seed_control_templates(db, framework=None):
     from app.models.control_template import ControlTemplate
     from app.models.control_template_framework_mapping import ControlTemplateFrameworkMapping
+    from app.models.framework import Framework
     from sqlalchemy import select
 
     # Check if already seeded
@@ -298,17 +316,36 @@ async def seed_control_templates(db, framework=None):
         print("Control templates already seeded, skipping.")
         return
 
+    # Look up HIPAA framework for mapping
+    hipaa_result = await db.execute(
+        select(Framework).where(Framework.name == "HIPAA Security Rule")
+    )
+    hipaa_framework = hipaa_result.scalar_one_or_none()
+
     for tmpl_data in CONTROL_TEMPLATES:
+        tmpl_data = dict(tmpl_data)  # copy to avoid mutating the constant
         req_codes = tmpl_data.pop("requirement_codes", [])
+        hipaa_codes = tmpl_data.pop("hipaa_requirement_codes", [])
         template = ControlTemplate(**tmpl_data)
         db.add(template)
         await db.flush()
 
+        # Map to SOC 2
         if framework:
             for code in req_codes:
                 mapping = ControlTemplateFrameworkMapping(
                     control_template_id=template.id,
                     framework_id=framework.id,
+                    requirement_code=code,
+                )
+                db.add(mapping)
+
+        # Map to HIPAA
+        if hipaa_framework:
+            for code in hipaa_codes:
+                mapping = ControlTemplateFrameworkMapping(
+                    control_template_id=template.id,
+                    framework_id=hipaa_framework.id,
                     requirement_code=code,
                 )
                 db.add(mapping)
