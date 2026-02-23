@@ -40,3 +40,6 @@ class Control(BaseModel):
         "ControlFrameworkMapping", back_populates="control", lazy="selectin"
     )
     evidence = relationship("Evidence", back_populates="control", lazy="selectin")
+    risk_mappings = relationship(
+        "RiskControlMapping", back_populates="control", lazy="selectin"
+    )

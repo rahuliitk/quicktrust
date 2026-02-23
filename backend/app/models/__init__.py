@@ -16,6 +16,14 @@ from app.models.agent_run import AgentRun
 from app.models.audit_log import AuditLog
 from app.models.policy_template import PolicyTemplate
 from app.models.policy import Policy
+from app.models.risk import Risk
+from app.models.risk_control_mapping import RiskControlMapping
+from app.models.integration import Integration
+from app.models.collection_job import CollectionJob
+from app.models.audit import Audit
+from app.models.audit_finding import AuditFinding
+from app.models.auditor_access_token import AuditorAccessToken
+from app.models.onboarding_session import OnboardingSession
 
 __all__ = [
     "BaseModel",
@@ -36,4 +44,12 @@ __all__ = [
     "AuditLog",
     "PolicyTemplate",
     "Policy",
+    "Risk",
+    "RiskControlMapping",
+    "Integration",
+    "CollectionJob",
+    "Audit",
+    "AuditFinding",
+    "AuditorAccessToken",
+    "OnboardingSession",
 ]

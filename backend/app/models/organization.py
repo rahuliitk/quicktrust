@@ -20,3 +20,7 @@ class Organization(BaseModel):
     evidence = relationship("Evidence", back_populates="organization", lazy="selectin")
     agent_runs = relationship("AgentRun", back_populates="organization", lazy="selectin")
     policies = relationship("Policy", back_populates="organization", lazy="selectin")
+    risks = relationship("Risk", back_populates="organization", lazy="selectin")
+    integrations = relationship("Integration", back_populates="organization", lazy="selectin")
+    audits = relationship("Audit", back_populates="organization", lazy="selectin")
+    onboarding_sessions = relationship("OnboardingSession", back_populates="organization", lazy="selectin")
