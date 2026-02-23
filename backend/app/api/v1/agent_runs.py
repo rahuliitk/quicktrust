@@ -72,6 +72,62 @@ async def _run_agent(agent_run_id: str, org_id: str):
         await db.commit()
 
 
+@router.post("/policy-generation/run", response_model=AgentRunResponse, status_code=201)
+async def trigger_policy_generation(
+    org_id: UUID, data: AgentRunTrigger, db: DB, current_user: CurrentUser
+):
+    agent_run = AgentRun(
+        org_id=org_id,
+        agent_type="policy_generation",
+        trigger="manual",
+        status="pending",
+        input_data={
+            "framework_id": str(data.framework_id),
+            "company_context": data.company_context or {},
+        },
+    )
+    db.add(agent_run)
+    await db.commit()
+    await db.refresh(agent_run)
+
+    asyncio.create_task(_run_policy_agent(str(agent_run.id), str(org_id)))
+
+    return agent_run
+
+
+async def _run_policy_agent(agent_run_id: str, org_id: str):
+    """Background task that runs the policy generation agent."""
+    from app.core.database import async_session
+    from app.agents.policy_generation.graph import run_policy_generation
+
+    async with async_session() as db:
+        run = await db.get(AgentRun, agent_run_id)
+        if not run:
+            return
+
+        run.status = "running"
+        run.started_at = datetime.now(timezone.utc)
+        await db.commit()
+
+        try:
+            result = await run_policy_generation(
+                db=db,
+                org_id=org_id,
+                agent_run_id=agent_run_id,
+                framework_id=run.input_data["framework_id"],
+                company_context=run.input_data.get("company_context", {}),
+            )
+            run.status = "completed"
+            run.output_data = result
+            run.completed_at = datetime.now(timezone.utc)
+        except Exception as e:
+            run.status = "failed"
+            run.error_message = str(e)
+            run.completed_at = datetime.now(timezone.utc)
+
+        await db.commit()
+
+
 @router.get("/runs", response_model=PaginatedResponse)
 async def list_runs(
     org_id: UUID,

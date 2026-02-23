@@ -10,6 +10,8 @@ from app.api.v1 import (
     controls,
     evidence,
     agent_runs,
+    policies,
+    policy_templates,
 )
 
 api_router = APIRouter()
@@ -23,3 +25,5 @@ api_router.include_router(evidence_templates.router)
 api_router.include_router(controls.router)
 api_router.include_router(evidence.router)
 api_router.include_router(agent_runs.router)
+api_router.include_router(policies.router)
+api_router.include_router(policy_templates.router)

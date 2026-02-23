@@ -19,3 +19,4 @@ class Organization(BaseModel):
     controls = relationship("Control", back_populates="organization", lazy="selectin")
     evidence = relationship("Evidence", back_populates="organization", lazy="selectin")
     agent_runs = relationship("AgentRun", back_populates="organization", lazy="selectin")
+    policies = relationship("Policy", back_populates="organization", lazy="selectin")

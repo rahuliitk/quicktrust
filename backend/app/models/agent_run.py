@@ -25,3 +25,4 @@ class AgentRun(BaseModel):
 
     organization = relationship("Organization", back_populates="agent_runs")
     controls = relationship("Control", back_populates="agent_run", lazy="selectin")
+    policies = relationship("Policy", back_populates="agent_run", lazy="selectin")

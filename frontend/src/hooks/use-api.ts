@@ -8,9 +8,13 @@ import type {
   ControlStats,
   ControlTemplate,
   EvidenceTemplate,
+  Evidence,
   AgentRun,
   AgentRunTrigger,
   Organization,
+  Policy,
+  PolicyStats,
+  PolicyTemplate,
   PaginatedResponse,
 } from "@/lib/types";
 
@@ -116,6 +120,23 @@ export function useEvidenceTemplates(params?: { page?: number }) {
   });
 }
 
+// Evidence
+export function useEvidence(orgId: string, params?: { control_id?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.control_id) searchParams.set("control_id", params.control_id);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["evidence", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<Evidence>>(
+        `/organizations/${orgId}/evidence${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
 // Agent Runs
 export function useAgentRuns(orgId: string) {
   return useQuery({
@@ -147,6 +168,96 @@ export function useTriggerAgent(orgId: string) {
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+    },
+  });
+}
+
+// Policies
+export function usePolicies(orgId: string, params?: { status?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["policies", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<Policy>>(
+        `/organizations/${orgId}/policies${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function usePolicy(orgId: string, policyId: string) {
+  return useQuery({
+    queryKey: ["policies", orgId, policyId],
+    queryFn: () =>
+      api.get<Policy>(`/organizations/${orgId}/policies/${policyId}`),
+    enabled: !!orgId && !!policyId,
+  });
+}
+
+export function usePolicyStats(orgId: string) {
+  return useQuery({
+    queryKey: ["policy-stats", orgId],
+    queryFn: () =>
+      api.get<PolicyStats>(`/organizations/${orgId}/policies/stats`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreatePolicy(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; content?: string; template_id?: string; status?: string }) =>
+      api.post<Policy>(`/organizations/${orgId}/policies`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["policies", orgId] });
+      qc.invalidateQueries({ queryKey: ["policy-stats", orgId] });
+    },
+  });
+}
+
+export function useUpdatePolicy(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ policyId, ...data }: { policyId: string; title?: string; content?: string; status?: string }) =>
+      api.patch<Policy>(`/organizations/${orgId}/policies/${policyId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["policies", orgId] });
+      qc.invalidateQueries({ queryKey: ["policy-stats", orgId] });
+    },
+  });
+}
+
+export function usePolicyTemplates(params?: { category?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.category) searchParams.set("category", params.category);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["policy-templates", params],
+    queryFn: () =>
+      api.get<PaginatedResponse<PolicyTemplate>>(
+        `/policy-templates${qs ? `?${qs}` : ""}`
+      ),
+  });
+}
+
+export function useTriggerPolicyAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTrigger) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/policy-generation/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+      qc.invalidateQueries({ queryKey: ["policies", orgId] });
+      qc.invalidateQueries({ queryKey: ["policy-stats", orgId] });
     },
   });
 }
