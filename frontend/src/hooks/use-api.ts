@@ -581,3 +581,653 @@ export function useLatestOnboarding(orgId: string) {
     enabled: !!orgId,
   });
 }
+
+// ===== Update Organization =====
+
+export function useUpdateOrganization(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Organization>) =>
+      api.patch<Organization>(`/organizations/${orgId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["organizations", orgId] });
+    },
+  });
+}
+
+// ===== Incidents =====
+
+export function useIncidents(orgId: string, params?: { status?: string; severity?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.severity) searchParams.set("severity", params.severity);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["incidents", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/incidents${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useIncident(orgId: string, incidentId: string) {
+  return useQuery({
+    queryKey: ["incidents", orgId, incidentId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/incidents/${incidentId}`),
+    enabled: !!orgId && !!incidentId,
+  });
+}
+
+export function useIncidentStats(orgId: string) {
+  return useQuery({
+    queryKey: ["incident-stats", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/incidents/stats`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateIncident(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) =>
+      api.post<any>(`/organizations/${orgId}/incidents`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["incidents", orgId] });
+      qc.invalidateQueries({ queryKey: ["incident-stats", orgId] });
+    },
+  });
+}
+
+export function useUpdateIncident(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ incidentId, ...data }: { incidentId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/incidents/${incidentId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["incidents", orgId] });
+      qc.invalidateQueries({ queryKey: ["incident-stats", orgId] });
+    },
+  });
+}
+
+export function useDeleteIncident(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (incidentId: string) =>
+      api.delete(`/organizations/${orgId}/incidents/${incidentId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["incidents", orgId] });
+      qc.invalidateQueries({ queryKey: ["incident-stats", orgId] });
+    },
+  });
+}
+
+export function useIncidentTimeline(orgId: string, incidentId: string) {
+  return useQuery({
+    queryKey: ["incident-timeline", orgId, incidentId],
+    queryFn: () =>
+      api.get<any[]>(`/organizations/${orgId}/incidents/${incidentId}/timeline`),
+    enabled: !!orgId && !!incidentId,
+  });
+}
+
+export function useAddTimelineEvent(orgId: string, incidentId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { event_type: string; description: string }) =>
+      api.post<any>(`/organizations/${orgId}/incidents/${incidentId}/timeline`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["incident-timeline", orgId, incidentId] });
+    },
+  });
+}
+
+// ===== Vendors =====
+
+export function useVendors(orgId: string, params?: { risk_tier?: string; status?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.risk_tier) searchParams.set("risk_tier", params.risk_tier);
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["vendors", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/vendors${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useVendor(orgId: string, vendorId: string) {
+  return useQuery({
+    queryKey: ["vendors", orgId, vendorId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/vendors/${vendorId}`),
+    enabled: !!orgId && !!vendorId,
+  });
+}
+
+export function useVendorStats(orgId: string) {
+  return useQuery({
+    queryKey: ["vendor-stats", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/vendors/stats`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateVendor(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) =>
+      api.post<any>(`/organizations/${orgId}/vendors`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["vendors", orgId] });
+      qc.invalidateQueries({ queryKey: ["vendor-stats", orgId] });
+    },
+  });
+}
+
+export function useUpdateVendor(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ vendorId, ...data }: { vendorId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/vendors/${vendorId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["vendors", orgId] });
+      qc.invalidateQueries({ queryKey: ["vendor-stats", orgId] });
+    },
+  });
+}
+
+export function useDeleteVendor(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vendorId: string) =>
+      api.delete(`/organizations/${orgId}/vendors/${vendorId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["vendors", orgId] });
+      qc.invalidateQueries({ queryKey: ["vendor-stats", orgId] });
+    },
+  });
+}
+
+export function useVendorAssessments(orgId: string, vendorId: string) {
+  return useQuery({
+    queryKey: ["vendor-assessments", orgId, vendorId],
+    queryFn: () =>
+      api.get<any[]>(`/organizations/${orgId}/vendors/${vendorId}/assessments`),
+    enabled: !!orgId && !!vendorId,
+  });
+}
+
+export function useCreateVendorAssessment(orgId: string, vendorId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { score: number; risk_tier_assigned: string; notes?: string }) =>
+      api.post<any>(`/organizations/${orgId}/vendors/${vendorId}/assessments`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["vendor-assessments", orgId, vendorId] });
+      qc.invalidateQueries({ queryKey: ["vendors", orgId] });
+    },
+  });
+}
+
+// ===== Training =====
+
+export function useTrainingCourses(orgId: string, params?: { page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["training-courses", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/training/courses${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useTrainingCourse(orgId: string, courseId: string) {
+  return useQuery({
+    queryKey: ["training-courses", orgId, courseId],
+    queryFn: () =>
+      api.get<any>(`/organizations/${orgId}/training/courses/${courseId}`),
+    enabled: !!orgId && !!courseId,
+  });
+}
+
+export function useCreateTrainingCourse(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) =>
+      api.post<any>(`/organizations/${orgId}/training/courses`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["training-courses", orgId] });
+      qc.invalidateQueries({ queryKey: ["training-stats", orgId] });
+    },
+  });
+}
+
+export function useUpdateTrainingCourse(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ courseId, ...data }: { courseId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/training/courses/${courseId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["training-courses", orgId] });
+      qc.invalidateQueries({ queryKey: ["training-stats", orgId] });
+    },
+  });
+}
+
+export function useDeleteTrainingCourse(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (courseId: string) =>
+      api.delete(`/organizations/${orgId}/training/courses/${courseId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["training-courses", orgId] });
+      qc.invalidateQueries({ queryKey: ["training-stats", orgId] });
+    },
+  });
+}
+
+export function useTrainingAssignments(orgId: string, params?: { status?: string; course_id?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.course_id) searchParams.set("course_id", params.course_id);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["training-assignments", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/training/assignments${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useTrainingStats(orgId: string) {
+  return useQuery({
+    queryKey: ["training-stats", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/training/stats`),
+    enabled: !!orgId,
+  });
+}
+
+// ===== Access Reviews =====
+
+export function useAccessReviewCampaigns(orgId: string, params?: { status?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["access-review-campaigns", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/access-reviews${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useAccessReviewCampaign(orgId: string, campaignId: string) {
+  return useQuery({
+    queryKey: ["access-review-campaigns", orgId, campaignId],
+    queryFn: () =>
+      api.get<any>(`/organizations/${orgId}/access-reviews/${campaignId}`),
+    enabled: !!orgId && !!campaignId,
+  });
+}
+
+export function useAccessReviewStats(orgId: string) {
+  return useQuery({
+    queryKey: ["access-review-stats", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/access-reviews/stats`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateAccessReviewCampaign(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; description?: string; due_date?: string }) =>
+      api.post<any>(`/organizations/${orgId}/access-reviews`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
+      qc.invalidateQueries({ queryKey: ["access-review-stats", orgId] });
+    },
+  });
+}
+
+export function useUpdateAccessReviewCampaign(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ campaignId, ...data }: { campaignId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/access-reviews/${campaignId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
+      qc.invalidateQueries({ queryKey: ["access-review-stats", orgId] });
+    },
+  });
+}
+
+export function useAccessReviewEntries(orgId: string, campaignId: string) {
+  return useQuery({
+    queryKey: ["access-review-entries", orgId, campaignId],
+    queryFn: () =>
+      api.get<any[]>(`/organizations/${orgId}/access-reviews/${campaignId}/entries`),
+    enabled: !!orgId && !!campaignId,
+  });
+}
+
+export function useCreateAccessReviewEntry(orgId: string, campaignId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { user_name: string; user_email: string; system_name: string; resource: string; current_access: string }) =>
+      api.post<any>(`/organizations/${orgId}/access-reviews/${campaignId}/entries`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["access-review-entries", orgId, campaignId] });
+      qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
+    },
+  });
+}
+
+export function useUpdateAccessReviewEntry(orgId: string, campaignId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ entryId, ...data }: { entryId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/access-reviews/${campaignId}/entries/${entryId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["access-review-entries", orgId, campaignId] });
+      qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
+    },
+  });
+}
+
+// ===== Monitoring =====
+
+export function useMonitorRules(orgId: string, params?: { check_type?: string; is_active?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.check_type) searchParams.set("check_type", params.check_type);
+  if (params?.is_active) searchParams.set("is_active", params.is_active);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["monitor-rules", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/monitoring/rules${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useMonitorRule(orgId: string, ruleId: string) {
+  return useQuery({
+    queryKey: ["monitor-rules", orgId, ruleId],
+    queryFn: () =>
+      api.get<any>(`/organizations/${orgId}/monitoring/rules/${ruleId}`),
+    enabled: !!orgId && !!ruleId,
+  });
+}
+
+export function useCreateMonitorRule(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) =>
+      api.post<any>(`/organizations/${orgId}/monitoring/rules`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
+      qc.invalidateQueries({ queryKey: ["monitoring-stats", orgId] });
+    },
+  });
+}
+
+export function useUpdateMonitorRule(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ruleId, ...data }: { ruleId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/monitoring/rules/${ruleId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
+      qc.invalidateQueries({ queryKey: ["monitoring-stats", orgId] });
+    },
+  });
+}
+
+export function useDeleteMonitorRule(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ruleId: string) =>
+      api.delete(`/organizations/${orgId}/monitoring/rules/${ruleId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
+      qc.invalidateQueries({ queryKey: ["monitoring-stats", orgId] });
+    },
+  });
+}
+
+export function useRunMonitorRule(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ruleId: string) =>
+      api.post<any>(`/organizations/${orgId}/monitoring/rules/${ruleId}/run`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
+      qc.invalidateQueries({ queryKey: ["monitor-alerts", orgId] });
+    },
+  });
+}
+
+export function useMonitorAlerts(orgId: string, params?: { status?: string; severity?: string; rule_id?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.severity) searchParams.set("severity", params.severity);
+  if (params?.rule_id) searchParams.set("rule_id", params.rule_id);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["monitor-alerts", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/monitoring/alerts${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useUpdateMonitorAlert(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ alertId, ...data }: { alertId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/monitoring/alerts/${alertId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["monitor-alerts", orgId] });
+      qc.invalidateQueries({ queryKey: ["monitoring-stats", orgId] });
+    },
+  });
+}
+
+export function useMonitoringStats(orgId: string) {
+  return useQuery({
+    queryKey: ["monitoring-stats", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/monitoring/stats`),
+    enabled: !!orgId,
+  });
+}
+
+// ===== Questionnaires =====
+
+export function useQuestionnaires(orgId: string, params?: { status?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["questionnaires", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/questionnaires${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useQuestionnaire(orgId: string, questionnaireId: string) {
+  return useQuery({
+    queryKey: ["questionnaires", orgId, questionnaireId],
+    queryFn: () =>
+      api.get<any>(`/organizations/${orgId}/questionnaires/${questionnaireId}`),
+    enabled: !!orgId && !!questionnaireId,
+  });
+}
+
+export function useQuestionnaireStats(orgId: string) {
+  return useQuery({
+    queryKey: ["questionnaire-stats", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/questionnaires/stats`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateQuestionnaire(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) =>
+      api.post<any>(`/organizations/${orgId}/questionnaires`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["questionnaires", orgId] });
+      qc.invalidateQueries({ queryKey: ["questionnaire-stats", orgId] });
+    },
+  });
+}
+
+export function useUpdateQuestionnaire(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ questionnaireId, ...data }: { questionnaireId: string } & Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/questionnaires/${questionnaireId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["questionnaires", orgId] });
+      qc.invalidateQueries({ queryKey: ["questionnaire-stats", orgId] });
+    },
+  });
+}
+
+export function useDeleteQuestionnaire(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionnaireId: string) =>
+      api.delete(`/organizations/${orgId}/questionnaires/${questionnaireId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["questionnaires", orgId] });
+      qc.invalidateQueries({ queryKey: ["questionnaire-stats", orgId] });
+    },
+  });
+}
+
+export function useAutoFillQuestionnaire(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (questionnaireId: string) =>
+      api.post<any>(`/organizations/${orgId}/questionnaires/${questionnaireId}/auto-fill`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["questionnaires", orgId] });
+    },
+  });
+}
+
+// ===== Trust Center =====
+
+export function useTrustCenterConfig(orgId: string) {
+  return useQuery({
+    queryKey: ["trust-center-config", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/trust-center/config`),
+    enabled: !!orgId,
+  });
+}
+
+export function useUpdateTrustCenterConfig(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Record<string, any>) =>
+      api.patch<any>(`/organizations/${orgId}/trust-center/config`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["trust-center-config", orgId] });
+    },
+  });
+}
+
+export function useTrustCenterDocuments(orgId: string) {
+  return useQuery({
+    queryKey: ["trust-center-documents", orgId],
+    queryFn: () => api.get<any[]>(`/organizations/${orgId}/trust-center/documents`),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateTrustCenterDocument(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) =>
+      api.post<any>(`/organizations/${orgId}/trust-center/documents`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["trust-center-documents", orgId] });
+    },
+  });
+}
+
+// ===== Reports =====
+
+export function useReports(orgId: string, params?: { report_type?: string; status?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.report_type) searchParams.set("report_type", params.report_type);
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["reports", orgId, params],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/reports${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateReport(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; report_type: string; format: string }) =>
+      api.post<any>(`/organizations/${orgId}/reports`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["reports", orgId] });
+      qc.invalidateQueries({ queryKey: ["report-stats", orgId] });
+    },
+  });
+}
+
+export function useReportStats(orgId: string) {
+  return useQuery({
+    queryKey: ["report-stats", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/reports/stats`),
+    enabled: !!orgId,
+  });
+}

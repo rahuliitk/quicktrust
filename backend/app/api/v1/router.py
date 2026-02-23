@@ -17,6 +17,14 @@ from app.api.v1 import (
     audits,
     auditor_portal,
     onboarding,
+    incidents,
+    vendors,
+    training,
+    access_reviews,
+    monitoring,
+    questionnaires,
+    trust_center,
+    reports,
 )
 
 api_router = APIRouter()
@@ -37,3 +45,12 @@ api_router.include_router(integrations.router)
 api_router.include_router(audits.router)
 api_router.include_router(auditor_portal.router)
 api_router.include_router(onboarding.router)
+api_router.include_router(incidents.router)
+api_router.include_router(vendors.router)
+api_router.include_router(training.router)
+api_router.include_router(access_reviews.router)
+api_router.include_router(monitoring.router)
+api_router.include_router(questionnaires.router)
+api_router.include_router(trust_center.router)
+api_router.include_router(reports.router)
+api_router.include_router(trust_center.public_router)
