@@ -30,6 +30,7 @@ import {
   Users,
   GitBranch,
   Search,
+  ShieldCheck,
 } from "lucide-react";
 
 // Role constants matching backend
@@ -62,6 +63,7 @@ const navItems: NavItem[] = [
   { href: "/incidents", label: "Incidents", icon: AlertCircle, section: "Operations", allowedRoles: COMPLIANCE_ROLES },
   { href: "/vendors", label: "Vendor Risk", icon: Building2, section: "Operations", allowedRoles: COMPLIANCE_ROLES },
   { href: "/monitoring", label: "Monitoring", icon: Activity, section: "Operations", allowedRoles: COMPLIANCE_ROLES },
+  { href: "/prowler", label: "Security Scanner", icon: ShieldCheck, section: "Operations", allowedRoles: COMPLIANCE_ROLES },
   // People
   { href: "/training", label: "Training", icon: GraduationCap, section: "People" },
   { href: "/access-reviews", label: "Access Reviews", icon: UserCheck, section: "People", allowedRoles: COMPLIANCE_ROLES },

@@ -1009,6 +1009,63 @@ export function useUpdateAccessReviewEntry(orgId: string, campaignId: string) {
   });
 }
 
+// ===== Prowler Security Scanner =====
+
+export function useProwlerTriggerScan(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { integration_id: string; scan_type: string; services?: string[]; compliance_framework?: string }) =>
+      api.post(`/organizations/${orgId}/prowler/scan`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["prowler-results", orgId] });
+      qc.invalidateQueries({ queryKey: ["prowler-findings-summary", orgId] });
+      qc.invalidateQueries({ queryKey: ["prowler-compliance-posture", orgId] });
+    },
+  });
+}
+
+export function useProwlerResults(orgId: string, params?: { severity?: string; status?: string; service?: string; page?: number }) {
+  const searchParams = new URLSearchParams();
+  if (params?.severity) searchParams.set("severity", params.severity);
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.service) searchParams.set("service", params.service);
+  if (params?.page) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+
+  return useQuery({
+    queryKey: ["prowler-results", orgId, params],
+    queryFn: () =>
+      api.get<any>(
+        `/organizations/${orgId}/prowler/results${qs ? `?${qs}` : ""}`
+      ),
+    enabled: !!orgId,
+  });
+}
+
+export function useProwlerScanDetail(orgId: string, jobId: string) {
+  return useQuery({
+    queryKey: ["prowler-scan-detail", orgId, jobId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/prowler/results/${jobId}`),
+    enabled: !!orgId && !!jobId,
+  });
+}
+
+export function useProwlerCompliancePosture(orgId: string) {
+  return useQuery({
+    queryKey: ["prowler-compliance-posture", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/prowler/compliance-posture`),
+    enabled: !!orgId,
+  });
+}
+
+export function useProwlerFindingsSummary(orgId: string) {
+  return useQuery({
+    queryKey: ["prowler-findings-summary", orgId],
+    queryFn: () => api.get<any>(`/organizations/${orgId}/prowler/findings-summary`),
+    enabled: !!orgId,
+  });
+}
+
 // ===== Monitoring =====
 
 export function useMonitorRules(orgId: string, params?: { check_type?: string; is_active?: string; page?: number }) {
