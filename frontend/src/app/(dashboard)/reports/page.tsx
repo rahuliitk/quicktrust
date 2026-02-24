@@ -265,22 +265,22 @@ export default function ReportsPage() {
                 >
                   {report.status}
                 </Badge>
-                {report.status === "completed" && report.data_url && (
+                {report.status === "completed" && report.file_url && (
                   <a
-                    href={report.data_url}
+                    href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/organizations/${orgId}/reports/${report.id}/download`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     <Button size="sm" variant="outline" className="gap-1">
                       <ExternalLink className="h-3 w-3" />
-                      View Data
+                      Download
                     </Button>
                   </a>
                 )}
-                {report.status === "completed" && !report.data_url && (
+                {report.status === "completed" && !report.file_url && (
                   <Button size="sm" variant="outline" className="gap-1" disabled>
                     <ExternalLink className="h-3 w-3" />
-                    View Data
+                    No file
                   </Button>
                 )}
               </CardContent>

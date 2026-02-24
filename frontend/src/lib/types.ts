@@ -754,3 +754,46 @@ export interface ReportStats {
   by_type: Record<string, number>;
   by_status: Record<string, number>;
 }
+
+// Role constants
+export const ROLES = {
+  SUPER_ADMIN: "super_admin",
+  ADMIN: "admin",
+  COMPLIANCE_MANAGER: "compliance_manager",
+  CONTROL_OWNER: "control_owner",
+  EMPLOYEE: "employee",
+  EXECUTIVE: "executive",
+  AUDITOR_INTERNAL: "auditor_internal",
+  AUDITOR_EXTERNAL: "auditor_external",
+} as const;
+
+export type Role = (typeof ROLES)[keyof typeof ROLES];
+
+// Agent trigger types for new agents
+export interface AgentRunTriggerGeneric {
+  framework_id?: string;
+  company_context?: Record<string, unknown>;
+  vendor_id?: string;
+  audit_id?: string;
+  control_ids?: string[];
+}
+
+// Framework builder types
+export interface FrameworkCreate {
+  name: string;
+  version: string;
+  category?: string;
+  description?: string;
+}
+
+export interface DomainCreate {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+export interface RequirementCreate {
+  code: string;
+  title: string;
+  description?: string;
+}

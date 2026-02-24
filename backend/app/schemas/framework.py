@@ -53,6 +53,35 @@ class ControlObjectiveResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# --- Create / Update schemas ---
+
+class FrameworkCreate(BaseModel):
+    name: str
+    version: str
+    category: str | None = None
+    description: str | None = None
+
+
+class FrameworkUpdate(BaseModel):
+    name: str | None = None
+    version: str | None = None
+    category: str | None = None
+    description: str | None = None
+    is_active: bool | None = None
+
+
+class DomainCreate(BaseModel):
+    code: str
+    name: str
+    description: str | None = None
+
+
+class RequirementCreate(BaseModel):
+    code: str
+    title: str
+    description: str | None = None
+
+
 class FrameworkDetailResponse(FrameworkResponse):
     domains: list[FrameworkDomainResponse] = []
 

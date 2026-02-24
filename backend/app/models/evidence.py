@@ -25,6 +25,8 @@ class Evidence(BaseModel):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     artifact_url: Mapped[str | None] = mapped_column(String(1000))
     artifact_hash: Mapped[str | None] = mapped_column(String(255))
+    file_url: Mapped[str | None] = mapped_column(String(1000))
+    file_name: Mapped[str | None] = mapped_column(String(500))
     data: Mapped[dict | None] = mapped_column(JSONType(), default=dict)
     collection_method: Mapped[str] = mapped_column(String(50), default="manual")
     collector: Mapped[str | None] = mapped_column(String(255))

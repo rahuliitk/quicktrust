@@ -1,13 +1,29 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import BadRequestError, NotFoundError
 from app.models.framework import Framework
 from app.models.framework_domain import FrameworkDomain
 from app.models.framework_requirement import FrameworkRequirement
+from app.schemas.framework import (
+    DomainCreate,
+    FrameworkCreate,
+    FrameworkUpdate,
+    RequirementCreate,
+)
+
+# Preset / seeded framework names that cannot be deleted
+SEEDED_FRAMEWORK_NAMES = {
+    "SOC 2 Type II",
+    "ISO 27001:2022",
+    "NIST CSF 2.0",
+    "HIPAA",
+    "PCI DSS 4.0",
+    "GDPR",
+}
 
 
 async def list_frameworks(db: AsyncSession) -> list[Framework]:
@@ -77,3 +93,108 @@ async def get_requirement(db: AsyncSession, requirement_id: UUID) -> FrameworkRe
     if not req:
         raise NotFoundError(f"Requirement {requirement_id} not found")
     return req
+
+
+# ---------------------------------------------------------------------------
+# CRUD operations for custom frameworks
+# ---------------------------------------------------------------------------
+
+
+async def create_framework(db: AsyncSession, data: FrameworkCreate) -> Framework:
+    """Create a new custom compliance framework."""
+    framework = Framework(
+        name=data.name,
+        version=data.version,
+        category=data.category,
+        description=data.description,
+        is_active=True,
+    )
+    db.add(framework)
+    await db.commit()
+    await db.refresh(framework)
+    return framework
+
+
+async def update_framework(
+    db: AsyncSession, framework_id: UUID, data: FrameworkUpdate
+) -> Framework:
+    """Update an existing framework's metadata."""
+    framework = await get_framework(db, framework_id)
+    update_fields = data.model_dump(exclude_unset=True)
+    for field, value in update_fields.items():
+        setattr(framework, field, value)
+    await db.commit()
+    await db.refresh(framework)
+    return framework
+
+
+async def delete_framework(db: AsyncSession, framework_id: UUID) -> None:
+    """Delete a custom framework. Seeded (preset) frameworks cannot be deleted."""
+    framework = await get_framework(db, framework_id)
+    if framework.name in SEEDED_FRAMEWORK_NAMES:
+        raise BadRequestError(
+            f"Cannot delete seeded framework '{framework.name}'. "
+            "Only custom frameworks may be deleted."
+        )
+    await db.delete(framework)
+    await db.commit()
+
+
+async def add_domain(
+    db: AsyncSession, framework_id: UUID, data: DomainCreate
+) -> FrameworkDomain:
+    """Add a new domain to an existing framework."""
+    # Verify framework exists
+    await get_framework(db, framework_id)
+
+    # Determine next sort_order
+    count_result = await db.execute(
+        select(func.count()).select_from(FrameworkDomain).where(
+            FrameworkDomain.framework_id == framework_id
+        )
+    )
+    next_order = (count_result.scalar() or 0)
+
+    domain = FrameworkDomain(
+        framework_id=framework_id,
+        code=data.code,
+        name=data.name,
+        description=data.description,
+        sort_order=next_order,
+    )
+    db.add(domain)
+    await db.commit()
+    await db.refresh(domain)
+    return domain
+
+
+async def add_requirement(
+    db: AsyncSession, framework_id: UUID, domain_id: UUID, data: RequirementCreate
+) -> FrameworkRequirement:
+    """Add a new requirement to a domain (verifying domain belongs to framework)."""
+    # Verify domain exists and belongs to the framework
+    domain = await get_domain(db, domain_id)
+    if domain.framework_id != framework_id:
+        raise BadRequestError(
+            f"Domain {domain_id} does not belong to framework {framework_id}"
+        )
+
+    # Determine next sort_order
+    count_result = await db.execute(
+        select(func.count()).select_from(FrameworkRequirement).where(
+            FrameworkRequirement.domain_id == domain_id
+        )
+    )
+    next_order = (count_result.scalar() or 0)
+
+    requirement = FrameworkRequirement(
+        domain_id=domain_id,
+        code=data.code,
+        title=data.title,
+        description=data.description,
+        sort_order=next_order,
+    )
+    db.add(requirement)
+    await db.commit()
+    await db.refresh(requirement)
+    return requirement

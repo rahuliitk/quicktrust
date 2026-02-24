@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type {
   Framework,
+  FrameworkCreate,
+  DomainCreate,
+  RequirementCreate,
   Control,
   ControlStats,
   ControlTemplate,
@@ -11,6 +14,7 @@ import type {
   Evidence,
   AgentRun,
   AgentRunTrigger,
+  AgentRunTriggerGeneric,
   Organization,
   Policy,
   PolicyStats,
@@ -1250,5 +1254,210 @@ export function useReportStats(orgId: string) {
     queryKey: ["report-stats", orgId],
     queryFn: () => api.get<ReportStats>(`/organizations/${orgId}/reports/stats`),
     enabled: !!orgId,
+  });
+}
+
+// ===== Policy Workflow =====
+
+export function useSubmitPolicy(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (policyId: string) =>
+      api.post(`/organizations/${orgId}/policies/${policyId}/submit-for-review`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["policies", orgId] });
+      qc.invalidateQueries({ queryKey: ["policy-stats", orgId] });
+    },
+  });
+}
+
+export function useApprovePolicy(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (policyId: string) =>
+      api.post(`/organizations/${orgId}/policies/${policyId}/approve`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["policies", orgId] });
+      qc.invalidateQueries({ queryKey: ["policy-stats", orgId] });
+    },
+  });
+}
+
+export function usePublishPolicy(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (policyId: string) =>
+      api.post(`/organizations/${orgId}/policies/${policyId}/publish`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["policies", orgId] });
+      qc.invalidateQueries({ queryKey: ["policy-stats", orgId] });
+    },
+  });
+}
+
+// ===== Agent Trigger Hooks (New Agents) =====
+
+export function useTriggerEvidenceAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTrigger) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/evidence-generation/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+      qc.invalidateQueries({ queryKey: ["evidence", orgId] });
+    },
+  });
+}
+
+export function useTriggerRiskAssessmentAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTriggerGeneric) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/risk-assessment/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+      qc.invalidateQueries({ queryKey: ["risks", orgId] });
+    },
+  });
+}
+
+export function useTriggerRemediationAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTriggerGeneric) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/remediation/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+      qc.invalidateQueries({ queryKey: ["controls", orgId] });
+    },
+  });
+}
+
+export function useTriggerAuditPrepAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTriggerGeneric) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/audit-preparation/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+      qc.invalidateQueries({ queryKey: ["audits", orgId] });
+    },
+  });
+}
+
+export function useTriggerVendorRiskAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTriggerGeneric) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/vendor-risk-assessment/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+      qc.invalidateQueries({ queryKey: ["vendors", orgId] });
+    },
+  });
+}
+
+export function useTriggerPentestAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTriggerGeneric) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/pentest-orchestrator/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+    },
+  });
+}
+
+export function useTriggerMonitoringDaemonAgent(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: AgentRunTriggerGeneric) =>
+      api.post<AgentRun>(
+        `/organizations/${orgId}/agents/monitoring-daemon/run`,
+        data
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["agent-runs", orgId] });
+      qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
+      qc.invalidateQueries({ queryKey: ["monitor-alerts", orgId] });
+    },
+  });
+}
+
+// ===== Framework Builder =====
+
+export function useCreateFramework() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: FrameworkCreate) =>
+      api.post<Framework>(`/frameworks`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["frameworks"] });
+    },
+  });
+}
+
+export function useUpdateFramework() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string } & Partial<FrameworkCreate>) =>
+      api.patch<Framework>(`/frameworks/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["frameworks"] });
+    },
+  });
+}
+
+export function useDeleteFramework() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/frameworks/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["frameworks"] });
+    },
+  });
+}
+
+export function useAddFrameworkDomain() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ frameworkId, ...data }: { frameworkId: string } & DomainCreate) =>
+      api.post(`/frameworks/${frameworkId}/domains`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["frameworks"] });
+    },
+  });
+}
+
+export function useAddDomainRequirement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      frameworkId,
+      domainId,
+      ...data
+    }: { frameworkId: string; domainId: string } & RequirementCreate) =>
+      api.post(`/frameworks/${frameworkId}/domains/${domainId}/requirements`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["frameworks"] });
+    },
   });
 }

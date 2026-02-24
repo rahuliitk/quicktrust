@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFrameworks } from "@/hooks/use-api";
-import { Shield, AlertTriangle } from "lucide-react";
+import { Shield, AlertTriangle, Plus } from "lucide-react";
 
 export default function FrameworksPage() {
   const { data: frameworks, isLoading, error } = useFrameworks();
@@ -36,9 +36,17 @@ export default function FrameworksPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Frameworks</h1>
-        <p className="text-muted-foreground">Compliance frameworks and their requirements</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Frameworks</h1>
+          <p className="text-muted-foreground">Compliance frameworks and their requirements</p>
+        </div>
+        <Link href="/frameworks/new">
+          <Button>
+            <Plus className="h-4 w-4 mr-1" />
+            Create Framework
+          </Button>
+        </Link>
       </div>
 
       {isLoading ? (

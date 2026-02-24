@@ -12,7 +12,11 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from app.core.scheduler import start_scheduler, stop_scheduler
+
+    await start_scheduler()
     yield
+    await stop_scheduler()
     await engine.dispose()
 
 

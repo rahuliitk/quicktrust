@@ -121,6 +121,31 @@ async def generate_report_data(db: AsyncSession, org_id: UUID, report_id: UUID) 
                 "completion_rate": round((completed / total_assignments * 100), 1) if total_assignments else 0.0,
             }
 
+        # Render to the requested format and upload to MinIO
+        if report.format in ("pdf", "csv"):
+            from app.services.report_renderer import render_pdf, render_csv
+            from app.core.storage import upload_file
+
+            if report.format == "pdf":
+                file_bytes = render_pdf(data, report.report_type)
+                content_type = "application/pdf"
+                extension = "pdf"
+            else:
+                file_bytes = render_csv(data, report.report_type)
+                content_type = "text/csv"
+                extension = "csv"
+
+            object_name = (
+                f"reports/{org_id}/{report_id}.{extension}"
+            )
+            file_url = upload_file(
+                bucket="quicktrust-reports",
+                object_name=object_name,
+                data=file_bytes,
+                content_type=content_type,
+            )
+            report.file_url = file_url if file_url else None
+
         report.status = "completed"
         report.generated_at = datetime.now(timezone.utc)
         await db.commit()

@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
 from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import (
     MonitorRuleCreate,
@@ -26,7 +26,7 @@ router = APIRouter(
 async def list_rules(
     org_id: UUID,
     db: DB,
-    current_user: CurrentUser,
+    current_user: AnyInternalUser,
     check_type: str | None = None,
     is_active: bool | None = None,
     page: int = Query(1, ge=1),
@@ -45,34 +45,34 @@ async def list_rules(
 
 
 @router.post("/rules", response_model=MonitorRuleResponse, status_code=201)
-async def create_rule(org_id: UUID, data: MonitorRuleCreate, db: DB, current_user: CurrentUser):
+async def create_rule(org_id: UUID, data: MonitorRuleCreate, db: DB, current_user: ComplianceUser):
     return await monitoring_service.create_rule(db, org_id, data)
 
 
 @router.get("/rules/{rule_id}", response_model=MonitorRuleResponse)
-async def get_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: CurrentUser):
+async def get_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: AnyInternalUser):
     return await monitoring_service.get_rule(db, org_id, rule_id)
 
 
 @router.patch("/rules/{rule_id}", response_model=MonitorRuleResponse)
 async def update_rule(
-    org_id: UUID, rule_id: UUID, data: MonitorRuleUpdate, db: DB, current_user: CurrentUser
+    org_id: UUID, rule_id: UUID, data: MonitorRuleUpdate, db: DB, current_user: ComplianceUser
 ):
     return await monitoring_service.update_rule(db, org_id, rule_id, data)
 
 
 @router.delete("/rules/{rule_id}", status_code=204)
-async def delete_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: CurrentUser):
+async def delete_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: ComplianceUser):
     await monitoring_service.delete_rule(db, org_id, rule_id)
 
 
 @router.post("/rules/{rule_id}/run", response_model=list[MonitorAlertResponse])
-async def run_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: CurrentUser):
+async def run_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: ComplianceUser):
     return await monitoring_service.run_checks(db, org_id, rule_id)
 
 
 @router.get("/stats", response_model=MonitoringStatsResponse)
-async def get_stats(org_id: UUID, db: DB, current_user: CurrentUser):
+async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
     return await monitoring_service.get_monitoring_stats(db, org_id)
 
 
@@ -82,7 +82,7 @@ async def get_stats(org_id: UUID, db: DB, current_user: CurrentUser):
 async def list_alerts(
     org_id: UUID,
     db: DB,
-    current_user: CurrentUser,
+    current_user: AnyInternalUser,
     status: str | None = None,
     severity: str | None = None,
     rule_id: UUID | None = None,
@@ -104,6 +104,6 @@ async def list_alerts(
 
 @router.patch("/alerts/{alert_id}", response_model=MonitorAlertResponse)
 async def update_alert(
-    org_id: UUID, alert_id: UUID, data: MonitorAlertUpdate, db: DB, current_user: CurrentUser
+    org_id: UUID, alert_id: UUID, data: MonitorAlertUpdate, db: DB, current_user: ComplianceUser
 ):
     return await monitoring_service.update_alert(db, org_id, alert_id, data, user_id=current_user.id)

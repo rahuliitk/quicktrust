@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
 from app.schemas.common import PaginatedResponse
 from app.schemas.risk import (
     RiskCreate,
@@ -25,7 +25,7 @@ router = APIRouter(
 async def list_risks(
     org_id: UUID,
     db: DB,
-    current_user: CurrentUser,
+    current_user: AnyInternalUser,
     status: str | None = None,
     risk_level: str | None = None,
     category: str | None = None,
@@ -46,42 +46,42 @@ async def list_risks(
 
 
 @router.post("", response_model=RiskResponse, status_code=201)
-async def create_risk(org_id: UUID, data: RiskCreate, db: DB, current_user: CurrentUser):
+async def create_risk(org_id: UUID, data: RiskCreate, db: DB, current_user: ComplianceUser):
     return await risk_service.create_risk(db, org_id, data)
 
 
 @router.get("/stats", response_model=RiskStatsResponse)
-async def get_risk_stats(org_id: UUID, db: DB, current_user: CurrentUser):
+async def get_risk_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
     return await risk_service.get_risk_stats(db, org_id)
 
 
 @router.get("/matrix", response_model=RiskMatrixResponse)
-async def get_risk_matrix(org_id: UUID, db: DB, current_user: CurrentUser):
+async def get_risk_matrix(org_id: UUID, db: DB, current_user: AnyInternalUser):
     cells = await risk_service.get_risk_matrix(db, org_id)
     return RiskMatrixResponse(cells=cells)
 
 
 @router.get("/{risk_id}", response_model=RiskResponse)
-async def get_risk(org_id: UUID, risk_id: UUID, db: DB, current_user: CurrentUser):
+async def get_risk(org_id: UUID, risk_id: UUID, db: DB, current_user: AnyInternalUser):
     return await risk_service.get_risk(db, org_id, risk_id)
 
 
 @router.patch("/{risk_id}", response_model=RiskResponse)
 async def update_risk(
-    org_id: UUID, risk_id: UUID, data: RiskUpdate, db: DB, current_user: CurrentUser
+    org_id: UUID, risk_id: UUID, data: RiskUpdate, db: DB, current_user: ComplianceUser
 ):
     return await risk_service.update_risk(db, org_id, risk_id, data)
 
 
 @router.delete("/{risk_id}", status_code=204)
-async def delete_risk(org_id: UUID, risk_id: UUID, db: DB, current_user: CurrentUser):
+async def delete_risk(org_id: UUID, risk_id: UUID, db: DB, current_user: ComplianceUser):
     await risk_service.delete_risk(db, org_id, risk_id)
 
 
 @router.post("/{risk_id}/controls", response_model=RiskControlMappingResponse, status_code=201)
 async def add_control_mapping(
     org_id: UUID, risk_id: UUID, data: RiskControlMappingCreate,
-    db: DB, current_user: CurrentUser,
+    db: DB, current_user: ComplianceUser,
 ):
     return await risk_service.add_control_mapping(db, org_id, risk_id, data)
 
@@ -89,6 +89,6 @@ async def add_control_mapping(
 @router.delete("/{risk_id}/controls/{mapping_id}", status_code=204)
 async def remove_control_mapping(
     org_id: UUID, risk_id: UUID, mapping_id: UUID,
-    db: DB, current_user: CurrentUser,
+    db: DB, current_user: ComplianceUser,
 ):
     await risk_service.remove_control_mapping(db, org_id, risk_id, mapping_id)
