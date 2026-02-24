@@ -15,10 +15,10 @@ import {
 import { useAgentStatus } from "@/hooks/use-agent-status";
 import type { AgentRun } from "@/lib/types";
 import { Bot, CheckCircle, Loader2, Play, XCircle, FileText } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 export default function AgentPolicyGenerationPage() {
+  const orgId = useOrgId();
   const { data: frameworks, isLoading: fwLoading } = useFrameworks();
   const [selectedFrameworkId, setSelectedFrameworkId] = useState<string>("");
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
@@ -30,13 +30,13 @@ export default function AgentPolicyGenerationPage() {
     tech_stack: ["React", "Node.js", "PostgreSQL"],
   });
 
-  const triggerAgent = useTriggerPolicyAgent(DEMO_ORG_ID);
+  const triggerAgent = useTriggerPolicyAgent(orgId);
   const { run, polling, elapsed, isComplete, isFailed } = useAgentStatus(
-    DEMO_ORG_ID,
+    orgId,
     currentRunId
   );
 
-  const { data: policiesData } = usePolicies(DEMO_ORG_ID, { status: "draft" });
+  const { data: policiesData } = usePolicies(orgId, { status: "draft" });
   const draftPolicies = policiesData?.items || [];
 
   function handleTrigger() {

@@ -446,3 +446,311 @@ export interface OnboardingSession {
   created_at: string;
   updated_at: string;
 }
+
+// Incidents
+
+export type IncidentSeverity = "P1" | "P2" | "P3" | "P4";
+export type IncidentStatus = "open" | "investigating" | "resolved" | "closed";
+
+export interface Incident {
+  id: string;
+  org_id: string;
+  title: string;
+  description: string | null;
+  severity: IncidentSeverity;
+  status: IncidentStatus;
+  category: string | null;
+  assigned_to_id: string | null;
+  detected_at: string | null;
+  resolved_at: string | null;
+  post_mortem_notes: string | null;
+  related_control_ids: string[] | null;
+  timeline_events?: IncidentTimelineEvent[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IncidentTimelineEvent {
+  id: string;
+  incident_id: string;
+  actor_id: string | null;
+  event_type: string;
+  description: string;
+  occurred_at: string;
+  created_at: string;
+}
+
+export interface IncidentStats {
+  total: number;
+  by_status: Record<string, number>;
+  by_severity: Record<string, number>;
+  open_p1_count: number;
+  avg_resolution_hours: number;
+}
+
+// Vendors
+
+export type VendorRiskTier = "critical" | "high" | "medium" | "low";
+export type VendorStatus = "active" | "under_review" | "terminated";
+
+export interface Vendor {
+  id: string;
+  org_id: string;
+  name: string;
+  category: string | null;
+  website: string | null;
+  risk_tier: VendorRiskTier;
+  status: VendorStatus;
+  contact_name: string | null;
+  contact_email: string | null;
+  contract_start_date: string | null;
+  contract_end_date: string | null;
+  last_assessment_date: string | null;
+  next_assessment_date: string | null;
+  assessment_score: number | null;
+  notes: string | null;
+  tags: string[] | null;
+  assessments?: VendorAssessment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorAssessment {
+  id: string;
+  vendor_id: string;
+  org_id: string;
+  assessed_by_id: string | null;
+  assessment_date: string | null;
+  score: number | null;
+  risk_tier_assigned: string | null;
+  notes: string | null;
+  questionnaire_data: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorStats {
+  total: number;
+  by_risk_tier: Record<string, number>;
+  by_status: Record<string, number>;
+  expiring_contracts_count: number;
+}
+
+// Training
+
+export interface TrainingCourse {
+  id: string;
+  org_id: string;
+  title: string;
+  description: string | null;
+  content_url: string | null;
+  course_type: string;
+  required_roles: string[] | null;
+  duration_minutes: number | null;
+  is_required: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrainingAssignment {
+  id: string;
+  org_id: string;
+  course_id: string;
+  user_id: string;
+  status: string;
+  due_date: string | null;
+  completed_at: string | null;
+  score: number | null;
+  attempts: number;
+  assigned_by_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrainingStats {
+  total_courses: number;
+  assigned: number;
+  completed: number;
+  overdue: number;
+  completion_rate_pct: number;
+}
+
+// Access Reviews
+
+export interface AccessReviewCampaign {
+  id: string;
+  org_id: string;
+  title: string;
+  description: string | null;
+  reviewer_id: string | null;
+  status: string;
+  due_date: string | null;
+  completed_at: string | null;
+  entry_count: number;
+  pending_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AccessReviewEntry {
+  id: string;
+  campaign_id: string;
+  org_id: string;
+  user_name: string;
+  user_email: string;
+  system_name: string;
+  resource: string | null;
+  current_access: string | null;
+  decision: string | null;
+  decided_by_id: string | null;
+  decided_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AccessReviewStats {
+  total_campaigns: number;
+  active_campaigns: number;
+  total_entries: number;
+  pending_decisions: number;
+  approved: number;
+  revoked: number;
+}
+
+// Monitoring
+
+export interface MonitorRule {
+  id: string;
+  org_id: string;
+  control_id: string | null;
+  title: string;
+  description: string | null;
+  check_type: string;
+  schedule: string;
+  is_active: boolean;
+  config: Record<string, unknown> | null;
+  last_checked_at: string | null;
+  last_result: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MonitorAlert {
+  id: string;
+  org_id: string;
+  rule_id: string;
+  severity: string;
+  status: string;
+  title: string;
+  details: Record<string, unknown> | null;
+  triggered_at: string | null;
+  resolved_at: string | null;
+  acknowledged_by_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MonitoringStats {
+  total_rules: number;
+  active_rules: number;
+  open_alerts: number;
+  by_severity: Record<string, number>;
+}
+
+// Questionnaires
+
+export interface Questionnaire {
+  id: string;
+  org_id: string;
+  title: string;
+  source: string | null;
+  status: string;
+  questions: Record<string, unknown>[] | null;
+  total_questions: number;
+  answered_count: number;
+  responses?: QuestionnaireResponseItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuestionnaireResponseItem {
+  id: string;
+  questionnaire_id: string;
+  org_id: string;
+  question_id: string;
+  question_text: string;
+  answer: string | null;
+  confidence: number | null;
+  source_type: string | null;
+  source_id: string | null;
+  is_approved: boolean;
+  approved_by_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuestionnaireStats {
+  total: number;
+  draft: number;
+  in_progress: number;
+  completed: number;
+  submitted: number;
+}
+
+// Trust Center
+
+export interface TrustCenterConfig {
+  id: string;
+  org_id: string;
+  is_published: boolean;
+  slug: string;
+  headline: string | null;
+  description: string | null;
+  contact_email: string | null;
+  logo_url: string | null;
+  certifications: string[] | null;
+  branding: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrustCenterDocument {
+  id: string;
+  org_id: string;
+  title: string;
+  document_type: string | null;
+  is_public: boolean;
+  requires_nda: boolean;
+  file_url: string | null;
+  description: string | null;
+  valid_until: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Reports
+
+export interface Report {
+  id: string;
+  org_id: string;
+  title: string;
+  report_type: string;
+  format: string;
+  status: string;
+  parameters: Record<string, unknown> | null;
+  generated_at: string | null;
+  file_url: string | null;
+  requested_by_id: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReportStats {
+  total: number;
+  by_type: Record<string, number>;
+  by_status: Record<string, number>;
+}

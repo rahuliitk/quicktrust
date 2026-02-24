@@ -19,8 +19,7 @@ import {
   useTriggerCollection,
 } from "@/hooks/use-api";
 import { ArrowLeft, Play, Plug, History } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 const PROVIDER_COLLECTORS: Record<string, { type: string; label: string }[]> = {
   aws: [
@@ -55,17 +54,18 @@ const jobStatusVariant: Record<
 
 export default function IntegrationDetailPage() {
   const params = useParams();
+  const orgId = useOrgId();
   const integrationId = params.id as string;
 
   const { data: integration, isLoading } = useIntegration(
-    DEMO_ORG_ID,
+    orgId,
     integrationId
   );
   const { data: jobsData, isLoading: jobsLoading } = useCollectionJobs(
-    DEMO_ORG_ID,
+    orgId,
     integrationId
   );
-  const triggerCollection = useTriggerCollection(DEMO_ORG_ID, integrationId);
+  const triggerCollection = useTriggerCollection(orgId, integrationId);
 
   const [runningType, setRunningType] = useState<string | null>(null);
 

@@ -24,6 +24,14 @@ from app.models.audit import Audit
 from app.models.audit_finding import AuditFinding
 from app.models.auditor_access_token import AuditorAccessToken
 from app.models.onboarding_session import OnboardingSession
+from app.models.incident import Incident, IncidentTimelineEvent
+from app.models.vendor import Vendor, VendorAssessment
+from app.models.training import TrainingCourse, TrainingAssignment
+from app.models.access_review import AccessReviewCampaign, AccessReviewEntry
+from app.models.monitoring import MonitorRule, MonitorAlert
+from app.models.questionnaire import Questionnaire, QuestionnaireResponse
+from app.models.trust_center import TrustCenterConfig, TrustCenterDocument
+from app.models.report import Report
 
 __all__ = [
     "BaseModel",
@@ -52,4 +60,19 @@ __all__ = [
     "AuditFinding",
     "AuditorAccessToken",
     "OnboardingSession",
+    "Incident",
+    "IncidentTimelineEvent",
+    "Vendor",
+    "VendorAssessment",
+    "TrainingCourse",
+    "TrainingAssignment",
+    "AccessReviewCampaign",
+    "AccessReviewEntry",
+    "MonitorRule",
+    "MonitorAlert",
+    "Questionnaire",
+    "QuestionnaireResponse",
+    "TrustCenterConfig",
+    "TrustCenterDocument",
+    "Report",
 ]

@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePolicy, useUpdatePolicy } from "@/hooks/use-api";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 const statusVariant: Record<string, "default" | "secondary" | "success" | "destructive" | "outline"> = {
   draft: "secondary",
@@ -32,9 +31,10 @@ const statusTransitions: Record<string, { label: string; nextStatus: string }[]>
 
 export default function PolicyDetailPage() {
   const params = useParams();
+  const orgId = useOrgId();
   const policyId = params.id as string;
-  const { data: policy, isLoading } = usePolicy(DEMO_ORG_ID, policyId);
-  const updatePolicy = useUpdatePolicy(DEMO_ORG_ID);
+  const { data: policy, isLoading } = usePolicy(orgId, policyId);
+  const updatePolicy = useUpdatePolicy(orgId);
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
 

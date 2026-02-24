@@ -7,10 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePolicies } from "@/hooks/use-api";
-import { FileText } from "lucide-react";
+import { useOrgId } from "@/hooks/use-org-id";
+import { FileText, Plus, AlertTriangle } from "lucide-react";
 import type { PolicyStatus } from "@/lib/types";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const STATUS_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All", value: undefined },
@@ -29,18 +28,50 @@ const statusVariant: Record<string, "default" | "secondary" | "success" | "destr
 };
 
 export default function PoliciesPage() {
+  const orgId = useOrgId();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const { data, isLoading } = usePolicies(DEMO_ORG_ID, { status: statusFilter });
+  const { data, isLoading, error } = usePolicies(orgId, { status: statusFilter });
 
   const policies = data?.items || [];
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Policies</h1>
+          <p className="text-muted-foreground">Manage your organization's security and compliance policies</p>
+        </div>
+        <Card className="border-destructive">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold">Failed to load policies</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {error.message || "An unexpected error occurred. Please try again later."}
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Policies</h1>
-        <p className="text-muted-foreground">
-          Manage your organization's security and compliance policies
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Policies</h1>
+          <p className="text-muted-foreground">
+            Manage your organization's security and compliance policies
+          </p>
+        </div>
+        <Link href="/agents/policy-generation">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Policy
+          </Button>
+        </Link>
       </div>
 
       <div className="flex gap-2">

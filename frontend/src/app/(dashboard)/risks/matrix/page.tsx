@@ -5,9 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRiskMatrix } from "@/hooks/use-api";
 import { ArrowLeft } from "lucide-react";
+import { useOrgId } from "@/hooks/use-org-id";
 import type { RiskMatrixCell } from "@/lib/types";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 function getCellColor(likelihood: number, impact: number): string {
   const score = likelihood * impact;
@@ -42,7 +41,8 @@ const IMPACT_LABELS: Record<number, string> = {
 };
 
 export default function RiskMatrixPage() {
-  const { data, isLoading } = useRiskMatrix(DEMO_ORG_ID);
+  const orgId = useOrgId();
+  const { data, isLoading } = useRiskMatrix(orgId);
 
   // Build a lookup map from cells array
   const cellMap = new Map<string, RiskMatrixCell>();

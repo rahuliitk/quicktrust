@@ -13,19 +13,18 @@ import {
   useRiskStats,
   useLatestOnboarding,
 } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, ListChecks, Bot, CheckCircle, FileText, AlertTriangle, Rocket } from "lucide-react";
 
-// Hardcoded org ID for demo — in production, this comes from auth context
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
-
 export default function DashboardPage() {
-  const { data: stats, isLoading: statsLoading } = useControlStats(DEMO_ORG_ID);
-  const { data: frameworks, isLoading: fwLoading } = useFrameworks();
-  const { data: agentRuns, isLoading: runsLoading } = useAgentRuns(DEMO_ORG_ID);
-  const { data: policyStats, isLoading: policyLoading } = usePolicyStats(DEMO_ORG_ID);
-  const { data: riskStats, isLoading: riskLoading } = useRiskStats(DEMO_ORG_ID);
-  const { data: latestOnboarding } = useLatestOnboarding(DEMO_ORG_ID);
+  const orgId = useOrgId();
+  const { data: stats, isLoading: statsLoading, error: statsError } = useControlStats(orgId);
+  const { data: frameworks, isLoading: fwLoading, error: fwError } = useFrameworks();
+  const { data: agentRuns, isLoading: runsLoading, error: runsError } = useAgentRuns(orgId);
+  const { data: policyStats, isLoading: policyLoading, error: policyError } = usePolicyStats(orgId);
+  const { data: riskStats, isLoading: riskLoading, error: riskError } = useRiskStats(orgId);
+  const { data: latestOnboarding } = useLatestOnboarding(orgId);
 
   const complianceScore = stats
     ? stats.total > 0
@@ -34,6 +33,32 @@ export default function DashboardPage() {
     : 0;
 
   const showGetStarted = !latestOnboarding || latestOnboarding.status === "failed";
+
+  const hasError = statsError || fwError || runsError || policyError || riskError;
+
+  if (hasError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Your compliance posture at a glance</p>
+        </div>
+        <Card className="border-destructive">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold">Failed to load dashboard data</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {(statsError || fwError || runsError || policyError || riskError)?.message ||
+                "An unexpected error occurred. Please try again later."}
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

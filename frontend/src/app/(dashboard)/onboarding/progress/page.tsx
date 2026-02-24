@@ -26,8 +26,7 @@ import {
   ArrowLeft,
   RotateCcw,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 interface ProgressStep {
   key: string;
@@ -59,11 +58,12 @@ const PROGRESS_STEPS: ProgressStep[] = [
 ];
 
 function OnboardingProgressContent() {
+  const orgId = useOrgId();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session") || "";
 
   const { data: session, isLoading, isError } = useOnboardingStatus(
-    DEMO_ORG_ID,
+    orgId,
     sessionId
   );
 
