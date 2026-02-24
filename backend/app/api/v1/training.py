@@ -2,7 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.audit_middleware import log_audit
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.schemas.common import PaginatedResponse
 from app.schemas.training import (
     TrainingCourseCreate,
@@ -25,7 +26,7 @@ router = APIRouter(
 
 @router.get("/courses", response_model=PaginatedResponse)
 async def list_courses(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     is_active: bool | None = None,
@@ -45,32 +46,37 @@ async def list_courses(
 
 
 @router.post("/courses", response_model=TrainingCourseResponse, status_code=201)
-async def create_course(org_id: UUID, data: TrainingCourseCreate, db: DB, current_user: ComplianceUser):
-    return await training_service.create_course(db, org_id, data)
+async def create_course(org_id: VerifiedOrgId, data: TrainingCourseCreate, db: DB, current_user: ComplianceUser):
+    item = await training_service.create_course(db, org_id, data)
+    await log_audit(db, current_user, "create", "training_course", str(item.id), org_id)
+    return item
 
 
 @router.get("/courses/{course_id}", response_model=TrainingCourseResponse)
-async def get_course(org_id: UUID, course_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_course(org_id: VerifiedOrgId, course_id: UUID, db: DB, current_user: AnyInternalUser):
     return await training_service.get_course(db, org_id, course_id)
 
 
 @router.patch("/courses/{course_id}", response_model=TrainingCourseResponse)
 async def update_course(
-    org_id: UUID, course_id: UUID, data: TrainingCourseUpdate, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, course_id: UUID, data: TrainingCourseUpdate, db: DB, current_user: ComplianceUser
 ):
-    return await training_service.update_course(db, org_id, course_id, data)
+    item = await training_service.update_course(db, org_id, course_id, data)
+    await log_audit(db, current_user, "update", "training_course", str(course_id), org_id)
+    return item
 
 
 @router.delete("/courses/{course_id}", status_code=204)
-async def delete_course(org_id: UUID, course_id: UUID, db: DB, current_user: ComplianceUser):
+async def delete_course(org_id: VerifiedOrgId, course_id: UUID, db: DB, current_user: ComplianceUser):
     await training_service.delete_course(db, org_id, course_id)
+    await log_audit(db, current_user, "delete", "training_course", str(course_id), org_id)
 
 
 # === Assignments ===
 
 @router.get("/assignments", response_model=PaginatedResponse)
 async def list_assignments(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     course_id: UUID | None = None,
@@ -91,17 +97,21 @@ async def list_assignments(
 
 
 @router.post("/assignments", response_model=TrainingAssignmentResponse, status_code=201)
-async def create_assignment(org_id: UUID, data: TrainingAssignmentCreate, db: DB, current_user: ComplianceUser):
-    return await training_service.create_assignment(db, org_id, data, assigned_by_id=current_user.id)
+async def create_assignment(org_id: VerifiedOrgId, data: TrainingAssignmentCreate, db: DB, current_user: ComplianceUser):
+    item = await training_service.create_assignment(db, org_id, data, assigned_by_id=current_user.id)
+    await log_audit(db, current_user, "create", "training_assignment", str(item.id), org_id)
+    return item
 
 
 @router.get("/assignments/stats", response_model=TrainingStatsResponse)
-async def get_training_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_training_stats(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     return await training_service.get_training_stats(db, org_id)
 
 
 @router.patch("/assignments/{assignment_id}", response_model=TrainingAssignmentResponse)
 async def update_assignment(
-    org_id: UUID, assignment_id: UUID, data: TrainingAssignmentUpdate, db: DB, current_user: CurrentUser
+    org_id: VerifiedOrgId, assignment_id: UUID, data: TrainingAssignmentUpdate, db: DB, current_user: CurrentUser
 ):
-    return await training_service.update_assignment(db, org_id, assignment_id, data)
+    item = await training_service.update_assignment(db, org_id, assignment_id, data)
+    await log_audit(db, current_user, "update", "training_assignment", str(assignment_id), org_id)
+    return item

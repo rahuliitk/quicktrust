@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     description="Open-source, agent-first GRC platform",
-    version="0.5.0",
+    version="0.6.0",
     lifespan=lifespan,
 )
 

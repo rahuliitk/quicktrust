@@ -2,7 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.audit_middleware import log_audit
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.schemas.common import PaginatedResponse
 from app.schemas.vendor import (
     VendorCreate,
@@ -22,7 +23,7 @@ router = APIRouter(
 
 @router.get("", response_model=PaginatedResponse)
 async def list_vendors(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     risk_tier: str | None = None,
@@ -43,39 +44,46 @@ async def list_vendors(
 
 
 @router.post("", response_model=VendorResponse, status_code=201)
-async def create_vendor(org_id: UUID, data: VendorCreate, db: DB, current_user: ComplianceUser):
-    return await vendor_service.create_vendor(db, org_id, data)
+async def create_vendor(org_id: VerifiedOrgId, data: VendorCreate, db: DB, current_user: ComplianceUser):
+    item = await vendor_service.create_vendor(db, org_id, data)
+    await log_audit(db, current_user, "create", "vendor", str(item.id), org_id)
+    return item
 
 
 @router.get("/stats", response_model=VendorStatsResponse)
-async def get_vendor_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_vendor_stats(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     return await vendor_service.get_vendor_stats(db, org_id)
 
 
 @router.get("/{vendor_id}", response_model=VendorResponse)
-async def get_vendor(org_id: UUID, vendor_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_vendor(org_id: VerifiedOrgId, vendor_id: UUID, db: DB, current_user: AnyInternalUser):
     return await vendor_service.get_vendor(db, org_id, vendor_id)
 
 
 @router.patch("/{vendor_id}", response_model=VendorResponse)
 async def update_vendor(
-    org_id: UUID, vendor_id: UUID, data: VendorUpdate, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, vendor_id: UUID, data: VendorUpdate, db: DB, current_user: ComplianceUser
 ):
-    return await vendor_service.update_vendor(db, org_id, vendor_id, data)
+    item = await vendor_service.update_vendor(db, org_id, vendor_id, data)
+    await log_audit(db, current_user, "update", "vendor", str(vendor_id), org_id)
+    return item
 
 
 @router.delete("/{vendor_id}", status_code=204)
-async def delete_vendor(org_id: UUID, vendor_id: UUID, db: DB, current_user: ComplianceUser):
+async def delete_vendor(org_id: VerifiedOrgId, vendor_id: UUID, db: DB, current_user: ComplianceUser):
     await vendor_service.delete_vendor(db, org_id, vendor_id)
+    await log_audit(db, current_user, "delete", "vendor", str(vendor_id), org_id)
 
 
 @router.post("/{vendor_id}/assessments", response_model=VendorAssessmentResponse, status_code=201)
 async def create_assessment(
-    org_id: UUID, vendor_id: UUID, data: VendorAssessmentCreate, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, vendor_id: UUID, data: VendorAssessmentCreate, db: DB, current_user: ComplianceUser
 ):
-    return await vendor_service.create_assessment(db, org_id, vendor_id, data, assessed_by_id=current_user.id)
+    item = await vendor_service.create_assessment(db, org_id, vendor_id, data, assessed_by_id=current_user.id)
+    await log_audit(db, current_user, "create_assessment", "vendor", str(vendor_id), org_id)
+    return item
 
 
 @router.get("/{vendor_id}/assessments", response_model=list[VendorAssessmentResponse])
-async def get_assessments(org_id: UUID, vendor_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_assessments(org_id: VerifiedOrgId, vendor_id: UUID, db: DB, current_user: AnyInternalUser):
     return await vendor_service.get_assessments(db, org_id, vendor_id)

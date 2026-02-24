@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.core.dependencies import DB, CurrentUser, ComplianceUser
+from app.core.dependencies import DB, CurrentUser, ComplianceUser, VerifiedOrgId
 from app.schemas.onboarding import OnboardingWizardInput, OnboardingSessionResponse
 from app.services import onboarding_service
 
@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.post("/start", response_model=OnboardingSessionResponse, status_code=201)
 async def start_onboarding(
-    org_id: UUID, data: OnboardingWizardInput, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: OnboardingWizardInput, db: DB, current_user: ComplianceUser
 ):
     session = await onboarding_service.start_onboarding(db, org_id, data)
 
@@ -35,11 +35,11 @@ async def _run_pipeline(session_id: str, org_id: str):
 
 @router.get("/status/{session_id}", response_model=OnboardingSessionResponse)
 async def get_onboarding_status(
-    org_id: UUID, session_id: UUID, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, session_id: UUID, db: DB, current_user: ComplianceUser
 ):
     return await onboarding_service.get_session(db, org_id, session_id)
 
 
 @router.get("/latest", response_model=OnboardingSessionResponse | None)
-async def get_latest_onboarding(org_id: UUID, db: DB, current_user: ComplianceUser):
+async def get_latest_onboarding(org_id: VerifiedOrgId, db: DB, current_user: ComplianceUser):
     return await onboarding_service.get_latest_session(db, org_id)

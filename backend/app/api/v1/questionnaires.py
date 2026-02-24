@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.questionnaire import (
     QuestionnaireCreate,
@@ -23,7 +23,7 @@ router = APIRouter(
 
 @router.get("", response_model=PaginatedResponse)
 async def list_questionnaires(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     status: str | None = None,
@@ -43,48 +43,48 @@ async def list_questionnaires(
 
 
 @router.post("", response_model=QuestionnaireDetailResponse, status_code=201)
-async def create_questionnaire(org_id: UUID, data: QuestionnaireCreate, db: DB, current_user: ComplianceUser):
+async def create_questionnaire(org_id: VerifiedOrgId, data: QuestionnaireCreate, db: DB, current_user: ComplianceUser):
     return await questionnaire_service.create_questionnaire(db, org_id, data)
 
 
 @router.get("/stats", response_model=QuestionnaireStatsResponse)
-async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_stats(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     return await questionnaire_service.get_questionnaire_stats(db, org_id)
 
 
 @router.get("/{questionnaire_id}", response_model=QuestionnaireDetailResponse)
-async def get_questionnaire(org_id: UUID, questionnaire_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_questionnaire(org_id: VerifiedOrgId, questionnaire_id: UUID, db: DB, current_user: AnyInternalUser):
     return await questionnaire_service.get_questionnaire(db, org_id, questionnaire_id)
 
 
 @router.patch("/{questionnaire_id}", response_model=QuestionnaireDetailResponse)
 async def update_questionnaire(
-    org_id: UUID, questionnaire_id: UUID, data: QuestionnaireUpdate, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, questionnaire_id: UUID, data: QuestionnaireUpdate, db: DB, current_user: ComplianceUser
 ):
     return await questionnaire_service.update_questionnaire(db, org_id, questionnaire_id, data)
 
 
 @router.delete("/{questionnaire_id}", status_code=204)
-async def delete_questionnaire(org_id: UUID, questionnaire_id: UUID, db: DB, current_user: ComplianceUser):
+async def delete_questionnaire(org_id: VerifiedOrgId, questionnaire_id: UUID, db: DB, current_user: ComplianceUser):
     await questionnaire_service.delete_questionnaire(db, org_id, questionnaire_id)
 
 
 @router.post("/{questionnaire_id}/auto-fill", response_model=MessageResponse)
-async def auto_fill(org_id: UUID, questionnaire_id: UUID, db: DB, current_user: ComplianceUser):
+async def auto_fill(org_id: VerifiedOrgId, questionnaire_id: UUID, db: DB, current_user: ComplianceUser):
     count = await questionnaire_service.auto_fill(db, org_id, questionnaire_id)
     return MessageResponse(message=f"Auto-filled {count} responses")
 
 
 @router.get("/{questionnaire_id}/responses/{question_id}", response_model=QuestionResponseRead)
 async def get_response(
-    org_id: UUID, questionnaire_id: UUID, question_id: str, db: DB, current_user: AnyInternalUser
+    org_id: VerifiedOrgId, questionnaire_id: UUID, question_id: str, db: DB, current_user: AnyInternalUser
 ):
     return await questionnaire_service.get_response(db, org_id, questionnaire_id, question_id)
 
 
 @router.put("/{questionnaire_id}/responses/{question_id}", response_model=QuestionResponseRead)
 async def upsert_response(
-    org_id: UUID, questionnaire_id: UUID, question_id: str,
+    org_id: VerifiedOrgId, questionnaire_id: UUID, question_id: str,
     data: QuestionResponseCreate, db: DB, current_user: ComplianceUser,
 ):
     data.question_id = question_id
@@ -93,7 +93,7 @@ async def upsert_response(
 
 @router.patch("/{questionnaire_id}/responses/{question_id}/approve", response_model=QuestionResponseRead)
 async def approve_response(
-    org_id: UUID, questionnaire_id: UUID, question_id: str, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, questionnaire_id: UUID, question_id: str, db: DB, current_user: ComplianceUser
 ):
     data = QuestionResponseUpdate(is_approved=True)
     return await questionnaire_service.update_response(

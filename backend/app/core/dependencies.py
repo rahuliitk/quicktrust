@@ -1,5 +1,6 @@
 from functools import wraps
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, Header
 from sqlalchemy import select
@@ -43,6 +44,22 @@ async def get_current_user(
         raise ForbiddenError("User account is deactivated")
 
     return user
+
+
+async def verify_org_access(
+    org_id: UUID,
+    current_user: User = Depends(get_current_user),
+) -> UUID:
+    """Verify the authenticated user belongs to the requested organization.
+
+    Super admins can access any organization. All other users must belong
+    to the organization specified in the URL path.
+    """
+    if current_user.role == SUPER_ADMIN:
+        return org_id
+    if str(current_user.org_id) != str(org_id):
+        raise ForbiddenError("Access denied: you do not belong to this organization")
+    return org_id
 
 
 async def get_optional_user(
@@ -150,3 +167,8 @@ ComplianceUser = Annotated[
     User, Depends(RoleChecker(SUPER_ADMIN, ADMIN, COMPLIANCE_MANAGER))
 ]
 AnyInternalUser = Annotated[User, Depends(RoleChecker(*INTERNAL_ROLES))]
+
+# ---------------------------------------------------------------------------
+# Org-scoped access — validates the org_id path param against the user's org
+# ---------------------------------------------------------------------------
+VerifiedOrgId = Annotated[UUID, Depends(verify_org_access)]

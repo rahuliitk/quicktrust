@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from app.core.dependencies import DB, CurrentUser, AdminUser
+from app.core.dependencies import DB, CurrentUser, AdminUser, VerifiedOrgId
 from app.schemas.organization import (
     OrganizationCreate,
     OrganizationResponse,
@@ -19,10 +19,10 @@ async def create_org(data: OrganizationCreate, db: DB, current_user: AdminUser):
 
 
 @router.get("/{org_id}", response_model=OrganizationResponse)
-async def get_org(org_id: UUID, db: DB, current_user: AdminUser):
+async def get_org(org_id: VerifiedOrgId, db: DB, current_user: AdminUser):
     return await organization_service.get_organization(db, org_id)
 
 
 @router.patch("/{org_id}", response_model=OrganizationResponse)
-async def update_org(org_id: UUID, data: OrganizationUpdate, db: DB, current_user: AdminUser):
+async def update_org(org_id: VerifiedOrgId, data: OrganizationUpdate, db: DB, current_user: AdminUser):
     return await organization_service.update_organization(db, org_id, data)

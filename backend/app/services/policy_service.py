@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache import cache_get, cache_set, cache_delete
 from app.core.exceptions import BadRequestError, NotFoundError
 from app.models.policy import Policy
 from app.models.policy_template import PolicyTemplate
@@ -35,6 +36,7 @@ async def create_policy(db: AsyncSession, org_id: UUID, data: PolicyCreate) -> P
     db.add(policy)
     await db.commit()
     await db.refresh(policy)
+    await cache_delete(f"org:{org_id}:policy_stats")
     return policy
 
 
@@ -64,9 +66,15 @@ async def delete_policy(db: AsyncSession, org_id: UUID, policy_id: UUID) -> None
     policy = await get_policy(db, org_id, policy_id)
     await db.delete(policy)
     await db.commit()
+    await cache_delete(f"org:{org_id}:policy_stats")
 
 
 async def get_policy_stats(db: AsyncSession, org_id: UUID) -> PolicyStatsResponse:
+    cache_key = f"org:{org_id}:policy_stats"
+    cached = await cache_get(cache_key)
+    if cached:
+        return PolicyStatsResponse(**cached)
+
     result = await db.execute(
         select(
             func.count().label("total"),
@@ -80,7 +88,7 @@ async def get_policy_stats(db: AsyncSession, org_id: UUID) -> PolicyStatsRespons
         .where(Policy.org_id == org_id)
     )
     row = result.one()
-    return PolicyStatsResponse(
+    stats = PolicyStatsResponse(
         total=row.total,
         draft=row.draft,
         in_review=row.in_review,
@@ -88,6 +96,8 @@ async def get_policy_stats(db: AsyncSession, org_id: UUID) -> PolicyStatsRespons
         published=row.published,
         archived=row.archived,
     )
+    await cache_set(cache_key, stats.model_dump(), ttl=120)
+    return stats
 
 
 async def list_policy_templates(
@@ -135,6 +145,7 @@ async def submit_for_review(
     policy.status = "in_review"
     await db.commit()
     await db.refresh(policy)
+    await cache_delete(f"org:{org_id}:policy_stats")
     return policy
 
 
@@ -152,6 +163,7 @@ async def approve_policy(
     policy.approved_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(policy)
+    await cache_delete(f"org:{org_id}:policy_stats")
     return policy
 
 
@@ -168,6 +180,7 @@ async def publish_policy(
     policy.published_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(policy)
+    await cache_delete(f"org:{org_id}:policy_stats")
     return policy
 
 
@@ -179,4 +192,5 @@ async def archive_policy(
     policy.status = "archived"
     await db.commit()
     await db.refresh(policy)
+    await cache_delete(f"org:{org_id}:policy_stats")
     return policy

@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, AnyInternalUser, AdminUser
+from app.core.dependencies import DB, AnyInternalUser, AdminUser, VerifiedOrgId
 from app.schemas.common import PaginatedResponse
 from app.schemas.audit_log import AuditLogResponse, AuditLogStatsResponse
 from app.services import audit_log_service
@@ -15,7 +15,7 @@ router = APIRouter(
 
 @router.get("", response_model=PaginatedResponse)
 async def list_audit_logs(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AdminUser,
     entity_type: str | None = None,
@@ -41,5 +41,5 @@ async def list_audit_logs(
 
 
 @router.get("/stats", response_model=AuditLogStatsResponse)
-async def get_stats(org_id: UUID, db: DB, current_user: AdminUser):
+async def get_stats(org_id: VerifiedOrgId, db: DB, current_user: AdminUser):
     return await audit_log_service.get_audit_log_stats(db, org_id)

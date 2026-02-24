@@ -2,7 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.audit_middleware import log_audit
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.schemas.common import PaginatedResponse
 from app.schemas.monitoring import (
     MonitorRuleCreate,
@@ -24,7 +25,7 @@ router = APIRouter(
 
 @router.get("/rules", response_model=PaginatedResponse)
 async def list_rules(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     check_type: str | None = None,
@@ -45,34 +46,39 @@ async def list_rules(
 
 
 @router.post("/rules", response_model=MonitorRuleResponse, status_code=201)
-async def create_rule(org_id: UUID, data: MonitorRuleCreate, db: DB, current_user: ComplianceUser):
-    return await monitoring_service.create_rule(db, org_id, data)
+async def create_rule(org_id: VerifiedOrgId, data: MonitorRuleCreate, db: DB, current_user: ComplianceUser):
+    item = await monitoring_service.create_rule(db, org_id, data)
+    await log_audit(db, current_user, "create", "monitor_rule", str(item.id), org_id)
+    return item
 
 
 @router.get("/rules/{rule_id}", response_model=MonitorRuleResponse)
-async def get_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_rule(org_id: VerifiedOrgId, rule_id: UUID, db: DB, current_user: AnyInternalUser):
     return await monitoring_service.get_rule(db, org_id, rule_id)
 
 
 @router.patch("/rules/{rule_id}", response_model=MonitorRuleResponse)
 async def update_rule(
-    org_id: UUID, rule_id: UUID, data: MonitorRuleUpdate, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, rule_id: UUID, data: MonitorRuleUpdate, db: DB, current_user: ComplianceUser
 ):
-    return await monitoring_service.update_rule(db, org_id, rule_id, data)
+    item = await monitoring_service.update_rule(db, org_id, rule_id, data)
+    await log_audit(db, current_user, "update", "monitor_rule", str(rule_id), org_id)
+    return item
 
 
 @router.delete("/rules/{rule_id}", status_code=204)
-async def delete_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: ComplianceUser):
+async def delete_rule(org_id: VerifiedOrgId, rule_id: UUID, db: DB, current_user: ComplianceUser):
     await monitoring_service.delete_rule(db, org_id, rule_id)
+    await log_audit(db, current_user, "delete", "monitor_rule", str(rule_id), org_id)
 
 
 @router.post("/rules/{rule_id}/run", response_model=list[MonitorAlertResponse])
-async def run_rule(org_id: UUID, rule_id: UUID, db: DB, current_user: ComplianceUser):
+async def run_rule(org_id: VerifiedOrgId, rule_id: UUID, db: DB, current_user: ComplianceUser):
     return await monitoring_service.run_checks(db, org_id, rule_id)
 
 
 @router.get("/stats", response_model=MonitoringStatsResponse)
-async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_stats(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     return await monitoring_service.get_monitoring_stats(db, org_id)
 
 
@@ -80,7 +86,7 @@ async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
 
 @router.get("/alerts", response_model=PaginatedResponse)
 async def list_alerts(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     status: str | None = None,
@@ -104,6 +110,8 @@ async def list_alerts(
 
 @router.patch("/alerts/{alert_id}", response_model=MonitorAlertResponse)
 async def update_alert(
-    org_id: UUID, alert_id: UUID, data: MonitorAlertUpdate, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, alert_id: UUID, data: MonitorAlertUpdate, db: DB, current_user: ComplianceUser
 ):
-    return await monitoring_service.update_alert(db, org_id, alert_id, data, user_id=current_user.id)
+    item = await monitoring_service.update_alert(db, org_id, alert_id, data, user_id=current_user.id)
+    await log_audit(db, current_user, "update", "monitor_alert", str(alert_id), org_id)
+    return item

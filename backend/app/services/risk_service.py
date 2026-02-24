@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.cache import cache_get, cache_set, cache_delete
 from app.core.exceptions import NotFoundError
 from app.models.risk import Risk
 from app.models.risk_control_mapping import RiskControlMapping
@@ -69,6 +70,7 @@ async def create_risk(db: AsyncSession, org_id: UUID, data: RiskCreate) -> Risk:
     db.add(risk)
     await db.commit()
     await db.refresh(risk)
+    await cache_delete(f"org:{org_id}:risk_stats")
     return risk
 
 
@@ -97,6 +99,7 @@ async def update_risk(db: AsyncSession, org_id: UUID, risk_id: UUID, data: RiskU
 
     await db.commit()
     await db.refresh(risk)
+    await cache_delete(f"org:{org_id}:risk_stats")
     return risk
 
 
@@ -104,9 +107,15 @@ async def delete_risk(db: AsyncSession, org_id: UUID, risk_id: UUID) -> None:
     risk = await get_risk(db, org_id, risk_id)
     await db.delete(risk)
     await db.commit()
+    await cache_delete(f"org:{org_id}:risk_stats")
 
 
 async def get_risk_stats(db: AsyncSession, org_id: UUID) -> dict:
+    cache_key = f"org:{org_id}:risk_stats"
+    cached = await cache_get(cache_key)
+    if cached:
+        return cached
+
     risks_result = await db.execute(select(Risk).where(Risk.org_id == org_id))
     risks = list(risks_result.scalars().all())
 
@@ -119,12 +128,14 @@ async def get_risk_stats(db: AsyncSession, org_id: UUID) -> dict:
         by_level[r.risk_level] = by_level.get(r.risk_level, 0) + 1
         total_score += r.risk_score
 
-    return {
+    stats = {
         "total": len(risks),
         "by_status": by_status,
         "by_risk_level": by_level,
         "average_score": round(total_score / len(risks), 1) if risks else 0.0,
     }
+    await cache_set(cache_key, stats, ttl=120)
+    return stats
 
 
 async def get_risk_matrix(db: AsyncSession, org_id: UUID) -> list[dict]:

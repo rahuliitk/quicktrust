@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, AnyInternalUser, AdminUser
+from app.core.dependencies import DB, AnyInternalUser, AdminUser, VerifiedOrgId
 from app.schemas.common import PaginatedResponse, MessageResponse
 from app.schemas.notification import (
     NotificationCreate,
@@ -21,7 +21,7 @@ router = APIRouter(
 
 @router.get("", response_model=PaginatedResponse)
 async def list_notifications(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     is_read: bool | None = None,
@@ -44,13 +44,13 @@ async def list_notifications(
 
 @router.post("", response_model=NotificationResponse, status_code=201)
 async def create_notification(
-    org_id: UUID, data: NotificationCreate, db: DB, current_user: AdminUser,
+    org_id: VerifiedOrgId, data: NotificationCreate, db: DB, current_user: AdminUser,
 ):
     return await notification_service.create_notification(db, org_id, data)
 
 
 @router.get("/stats", response_model=NotificationStatsResponse)
-async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_stats(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     return await notification_service.get_notification_stats(
         db, org_id, user_id=current_user.id
     )
@@ -58,13 +58,13 @@ async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
 
 @router.post("/{notification_id}/read", response_model=NotificationResponse)
 async def mark_read(
-    org_id: UUID, notification_id: UUID, db: DB, current_user: AnyInternalUser,
+    org_id: VerifiedOrgId, notification_id: UUID, db: DB, current_user: AnyInternalUser,
 ):
     return await notification_service.mark_read(db, org_id, notification_id)
 
 
 @router.post("/read-all", response_model=MessageResponse)
-async def mark_all_read(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def mark_all_read(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     count = await notification_service.mark_all_read(db, org_id, user_id=current_user.id)
     return MessageResponse(message=f"Marked {count} notifications as read")
 
@@ -73,7 +73,7 @@ async def mark_all_read(org_id: UUID, db: DB, current_user: AnyInternalUser):
 
 @router.post("/slack", response_model=SlackWebhookResponse, status_code=201)
 async def configure_slack(
-    org_id: UUID, data: SlackWebhookCreate, db: DB, current_user: AdminUser,
+    org_id: VerifiedOrgId, data: SlackWebhookCreate, db: DB, current_user: AdminUser,
 ):
     return await notification_service.configure_slack(
         db, org_id, data.webhook_url, data.channel_name, data.categories
@@ -81,5 +81,5 @@ async def configure_slack(
 
 
 @router.get("/slack", response_model=SlackWebhookResponse | None)
-async def get_slack_config(org_id: UUID, db: DB, current_user: AdminUser):
+async def get_slack_config(org_id: VerifiedOrgId, db: DB, current_user: AdminUser):
     return await notification_service.get_slack_config(db, org_id)

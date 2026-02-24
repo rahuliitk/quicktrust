@@ -60,6 +60,30 @@ class ApiClient {
   delete(path: string) {
     return this.request(path, { method: "DELETE" });
   }
+
+  async upload<T>(path: string, file: File, fieldName: string = "file"): Promise<T> {
+    const formData = new FormData();
+    formData.append(fieldName, file);
+
+    const headers: Record<string, string> = {};
+    if (this.token) {
+      headers["Authorization"] = `Bearer ${this.token}`;
+    }
+    // Do NOT set Content-Type — browser sets it with boundary for multipart
+
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(error.detail || `Upload error: ${res.status}`);
+    }
+
+    return res.json();
+  }
 }
 
 export const api = new ApiClient(`${API_URL}/api/v1`);

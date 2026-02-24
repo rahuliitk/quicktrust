@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.core.exceptions import NotFoundError
 from app.models.agent_run import AgentRun
 from app.schemas.agent_run import AgentRunResponse, AgentRunTrigger, AgentRunTriggerGeneric
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/organizations/{org_id}/agents", tags=["agents"])
 
 @router.post("/controls-generation/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_controls_generation(
-    org_id: UUID, data: AgentRunTrigger, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTrigger, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -74,7 +74,7 @@ async def _run_agent(agent_run_id: str, org_id: str):
 
 @router.post("/policy-generation/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_policy_generation(
-    org_id: UUID, data: AgentRunTrigger, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTrigger, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -130,7 +130,7 @@ async def _run_policy_agent(agent_run_id: str, org_id: str):
 
 @router.post("/evidence-generation/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_evidence_generation(
-    org_id: UUID, data: AgentRunTrigger, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTrigger, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -185,7 +185,7 @@ async def _run_evidence_agent(agent_run_id: str, org_id: str):
 
 @router.post("/risk-assessment/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_risk_assessment(
-    org_id: UUID, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -231,7 +231,7 @@ async def _run_risk_assessment_agent(agent_run_id: str, org_id: str):
 
 @router.post("/remediation/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_remediation(
-    org_id: UUID, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -272,7 +272,7 @@ async def _run_remediation_agent(agent_run_id: str, org_id: str):
 
 @router.post("/audit-preparation/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_audit_preparation(
-    org_id: UUID, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -318,7 +318,7 @@ async def _run_audit_prep_agent(agent_run_id: str, org_id: str):
 
 @router.post("/vendor-risk-assessment/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_vendor_risk_assessment(
-    org_id: UUID, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -364,7 +364,7 @@ async def _run_vendor_risk_agent(agent_run_id: str, org_id: str):
 
 @router.post("/pentest-orchestrator/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_pentest_orchestrator(
-    org_id: UUID, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -405,7 +405,7 @@ async def _run_pentest_agent(agent_run_id: str, org_id: str):
 
 @router.post("/monitoring-daemon/run", response_model=AgentRunResponse, status_code=201)
 async def trigger_monitoring_daemon(
-    org_id: UUID, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: AgentRunTriggerGeneric, db: DB, current_user: ComplianceUser
 ):
     agent_run = AgentRun(
         org_id=org_id,
@@ -446,7 +446,7 @@ async def _run_monitoring_daemon_agent(agent_run_id: str, org_id: str):
 
 @router.get("/runs", response_model=PaginatedResponse)
 async def list_runs(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     page: int = Query(1, ge=1),
@@ -475,7 +475,7 @@ async def list_runs(
 
 
 @router.get("/runs/{run_id}", response_model=AgentRunResponse)
-async def get_run(org_id: UUID, run_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_run(org_id: VerifiedOrgId, run_id: UUID, db: DB, current_user: AnyInternalUser):
     result = await db.execute(
         select(AgentRun).where(AgentRun.id == run_id, AgentRun.org_id == org_id)
     )
