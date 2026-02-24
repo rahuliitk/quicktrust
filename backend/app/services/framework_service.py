@@ -27,6 +27,14 @@ SEEDED_FRAMEWORK_NAMES = {
 
 
 async def list_frameworks(db: AsyncSession) -> list[Framework]:
+    from app.core.cache import cache_get, cache_set
+
+    cache_key = "frameworks:active_list"
+    cached = await cache_get(cache_key)
+    if cached:
+        # Cached list is serialized; still need to return ORM objects for validation
+        pass  # Fall through to DB query — cache speeds up stats/JSON endpoints
+
     result = await db.execute(
         select(Framework).where(Framework.is_active == True).order_by(Framework.name)
     )

@@ -30,10 +30,13 @@ async def list_controls(
 
 
 async def create_control(db: AsyncSession, org_id: UUID, data: ControlCreate) -> Control:
+    from app.core.cache import cache_delete
+
     control = Control(org_id=org_id, **data.model_dump())
     db.add(control)
     await db.commit()
     await db.refresh(control)
+    await cache_delete(f"org:{org_id}:control_stats")
     return control
 
 
@@ -50,19 +53,25 @@ async def get_control(db: AsyncSession, org_id: UUID, control_id: UUID) -> Contr
 async def update_control(
     db: AsyncSession, org_id: UUID, control_id: UUID, data: ControlUpdate
 ) -> Control:
+    from app.core.cache import cache_delete
+
     control = await get_control(db, org_id, control_id)
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(control, field, value)
     await db.commit()
     await db.refresh(control)
+    await cache_delete(f"org:{org_id}:control_stats")
     return control
 
 
 async def delete_control(db: AsyncSession, org_id: UUID, control_id: UUID) -> None:
+    from app.core.cache import cache_delete
+
     control = await get_control(db, org_id, control_id)
     await db.delete(control)
     await db.commit()
+    await cache_delete(f"org:{org_id}:control_stats")
 
 
 async def bulk_approve_controls(
@@ -82,6 +91,13 @@ async def bulk_approve_controls(
 
 
 async def get_control_stats(db: AsyncSession, org_id: UUID) -> ControlStatsResponse:
+    from app.core.cache import cache_get, cache_set
+
+    cache_key = f"org:{org_id}:control_stats"
+    cached = await cache_get(cache_key)
+    if cached:
+        return ControlStatsResponse(**cached)
+
     result = await db.execute(
         select(
             func.count().label("total"),
@@ -95,7 +111,7 @@ async def get_control_stats(db: AsyncSession, org_id: UUID) -> ControlStatsRespo
         .where(Control.org_id == org_id)
     )
     row = result.one()
-    return ControlStatsResponse(
+    stats = ControlStatsResponse(
         total=row.total,
         draft=row.draft,
         implemented=row.implemented,
@@ -103,3 +119,5 @@ async def get_control_stats(db: AsyncSession, org_id: UUID) -> ControlStatsRespo
         not_implemented=row.not_implemented,
         not_applicable=row.not_applicable,
     )
+    await cache_set(cache_key, stats.model_dump(), ttl=120)
+    return stats

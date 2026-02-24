@@ -1461,3 +1461,165 @@ export function useAddDomainRequirement() {
     },
   });
 }
+
+// =====================================================================
+// Notifications
+// =====================================================================
+
+export function useNotifications(orgId: string, isRead?: boolean) {
+  return useQuery({
+    queryKey: ["notifications", orgId, isRead],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(
+        `/organizations/${orgId}/notifications`,
+        { params: { is_read: isRead, page_size: 50 } }
+      ),
+    enabled: !!orgId,
+    refetchInterval: 30000, // Poll every 30s
+  });
+}
+
+export function useNotificationStats(orgId: string) {
+  return useQuery({
+    queryKey: ["notification-stats", orgId],
+    queryFn: () => api.get(`/organizations/${orgId}/notifications/stats`),
+    enabled: !!orgId,
+    refetchInterval: 30000,
+  });
+}
+
+export function useMarkNotificationRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orgId, notificationId }: { orgId: string; notificationId: string }) =>
+      api.post(`/organizations/${orgId}/notifications/${notificationId}/read`),
+    onSuccess: (_, { orgId }) => {
+      qc.invalidateQueries({ queryKey: ["notifications", orgId] });
+      qc.invalidateQueries({ queryKey: ["notification-stats", orgId] });
+    },
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orgId }: { orgId: string }) =>
+      api.post(`/organizations/${orgId}/notifications/read-all`),
+    onSuccess: (_, { orgId }) => {
+      qc.invalidateQueries({ queryKey: ["notifications", orgId] });
+      qc.invalidateQueries({ queryKey: ["notification-stats", orgId] });
+    },
+  });
+}
+
+// =====================================================================
+// Audit Logs
+// =====================================================================
+
+export function useAuditLogs(
+  orgId: string,
+  filters?: { entity_type?: string; action?: string }
+) {
+  return useQuery({
+    queryKey: ["audit-logs", orgId, filters],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>(`/organizations/${orgId}/audit-logs`, {
+        params: filters,
+      }),
+    enabled: !!orgId,
+  });
+}
+
+export function useAuditLogStats(orgId: string) {
+  return useQuery({
+    queryKey: ["audit-log-stats", orgId],
+    queryFn: () => api.get(`/organizations/${orgId}/audit-logs/stats`),
+    enabled: !!orgId,
+  });
+}
+
+// =====================================================================
+// Auditor Marketplace
+// =====================================================================
+
+export function useAuditorMarketplace(filters?: {
+  specialization?: string;
+  credential?: string;
+  location?: string;
+  verified_only?: boolean;
+}) {
+  return useQuery({
+    queryKey: ["auditor-marketplace", filters],
+    queryFn: () =>
+      api.get<PaginatedResponse<any>>("/auditor-marketplace", { params: filters }),
+  });
+}
+
+export function useAuditorProfile(profileId: string) {
+  return useQuery({
+    queryKey: ["auditor-profile", profileId],
+    queryFn: () => api.get(`/auditor-marketplace/${profileId}`),
+    enabled: !!profileId,
+  });
+}
+
+export function useMyAuditorProfile() {
+  return useQuery({
+    queryKey: ["my-auditor-profile"],
+    queryFn: () => api.get("/auditor-marketplace/me/profile"),
+  });
+}
+
+export function useRegisterAuditor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => api.post("/auditor-marketplace/register", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-auditor-profile"] });
+      qc.invalidateQueries({ queryKey: ["auditor-marketplace"] });
+    },
+  });
+}
+
+// =====================================================================
+// Gap Analysis
+// =====================================================================
+
+export function useGapAnalysis(orgId: string, frameworkId: string) {
+  return useQuery({
+    queryKey: ["gap-analysis", orgId, frameworkId],
+    queryFn: () =>
+      api.get(`/organizations/${orgId}/gap-analysis/framework/${frameworkId}`),
+    enabled: !!orgId && !!frameworkId,
+  });
+}
+
+export function useCrossFrameworkMatrix(orgId: string) {
+  return useQuery({
+    queryKey: ["cross-framework-matrix", orgId],
+    queryFn: () => api.get(`/organizations/${orgId}/gap-analysis/cross-framework`),
+    enabled: !!orgId,
+  });
+}
+
+// =====================================================================
+// Semantic Search (Embeddings)
+// =====================================================================
+
+export function useSemanticSearch() {
+  return useMutation({
+    mutationFn: ({
+      orgId,
+      query,
+      entityType,
+    }: {
+      orgId: string;
+      query: string;
+      entityType?: string;
+    }) =>
+      api.post(`/organizations/${orgId}/embeddings/search`, {
+        query,
+        entity_type: entityType,
+      }),
+  });
+}
