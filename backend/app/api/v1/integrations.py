@@ -39,6 +39,12 @@ PROVIDERS = [
         description="Collect MFA enrollment and identity management evidence.",
         collector_types=["okta_mfa_enrollment"],
     ),
+    ProviderInfo(
+        provider="prowler",
+        name="Prowler Security Scanner",
+        description="Run comprehensive security assessments against AWS, Azure, and GCP. Maps findings to CIS, SOC 2, HIPAA, PCI DSS, and more.",
+        collector_types=["prowler_aws_full_scan", "prowler_aws_service_scan", "prowler_aws_compliance_scan"],
+    ),
 ]
 
 

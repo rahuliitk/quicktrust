@@ -34,6 +34,11 @@ const PROVIDER_COLLECTORS: Record<string, { type: string; label: string }[]> = {
   okta: [
     { type: "okta_mfa_enrollment", label: "MFA Enrollment" },
   ],
+  prowler: [
+    { type: "prowler_aws_full_scan", label: "Full AWS Security Scan" },
+    { type: "prowler_aws_service_scan", label: "Service-Specific Scan" },
+    { type: "prowler_aws_compliance_scan", label: "Compliance Framework Scan" },
+  ],
 };
 
 const statusVariant: Record<string, "success" | "secondary" | "destructive"> = {

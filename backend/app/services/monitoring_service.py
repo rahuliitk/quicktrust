@@ -171,6 +171,55 @@ async def _execute_checks(
             rule.last_result = "fail"
         else:
             rule.last_result = "pass"
+    elif rule.check_type == "prowler_scan":
+        # Check for FAIL findings at or above severity threshold from latest Prowler scan
+        config = rule.config or {}
+        severity_threshold = config.get("severity_threshold", "medium")
+        severity_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+        min_severity = severity_order.get(severity_threshold, 2)
+
+        from app.models.collection_job import CollectionJob
+        scan_result = await db.execute(
+            select(CollectionJob).where(
+                CollectionJob.org_id == org_id,
+                CollectionJob.collector_type.like("prowler_%"),
+                CollectionJob.status == "completed",
+            ).order_by(CollectionJob.created_at.desc()).limit(1)
+        )
+        latest_scan = scan_result.scalar_one_or_none()
+
+        if latest_scan and latest_scan.result_data:
+            data = latest_scan.result_data.get("data", {})
+            findings = data.get("findings", [])
+            critical_findings = [
+                f for f in findings
+                if f.get("status", "").upper() == "FAIL"
+                and severity_order.get(f.get("severity", "").lower(), 0) >= min_severity
+            ]
+            if critical_findings:
+                alert = MonitorAlert(
+                    org_id=org_id,
+                    rule_id=rule.id,
+                    severity="high",
+                    title=f"Prowler scan: {len(critical_findings)} findings at {severity_threshold}+ severity",
+                    details={
+                        "finding_count": len(critical_findings),
+                        "scan_job_id": str(latest_scan.id),
+                        "top_findings": [
+                            {"check_id": f.get("check_id"), "severity": f.get("severity"), "service": f.get("service")}
+                            for f in critical_findings[:5]
+                        ],
+                    },
+                    triggered_at=now,
+                )
+                db.add(alert)
+                alerts_created.append(alert)
+                rule.last_result = "fail"
+            else:
+                rule.last_result = "pass"
+        else:
+            rule.last_result = "pass"
+
     else:
         rule.last_result = "pass"
 

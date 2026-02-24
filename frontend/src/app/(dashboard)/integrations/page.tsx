@@ -40,6 +40,11 @@ const CREDENTIAL_FIELDS: Record<string, { label: string; placeholder: string; ty
     { label: "Okta Domain", placeholder: "your-org.okta.com" },
     { label: "API Token", placeholder: "00...", type: "password" },
   ],
+  prowler: [
+    { label: "AWS Access Key ID", placeholder: "AKIA..." },
+    { label: "AWS Secret Access Key", placeholder: "wJalr...", type: "password" },
+    { label: "AWS Region", placeholder: "us-east-1" },
+  ],
 };
 
 export default function IntegrationsPage() {

@@ -32,6 +32,7 @@ from app.api.v1 import (
     gap_analysis,
     tenants,
     embeddings,
+    prowler,
 )
 
 api_router = APIRouter()
@@ -69,3 +70,4 @@ api_router.include_router(auditor_marketplace.router)
 api_router.include_router(gap_analysis.router)
 api_router.include_router(tenants.router)
 api_router.include_router(embeddings.router)
+api_router.include_router(prowler.router)

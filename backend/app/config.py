@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     LITELLM_MODEL: str = "gpt-4o-mini"
     OPENAI_API_KEY: str = ""
 
+    # Prowler
+    PROWLER_OUTPUT_DIR: str = "/tmp/prowler-output"
+    PROWLER_TIMEOUT_SECONDS: int = 3600
+
     # SMTP email
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
