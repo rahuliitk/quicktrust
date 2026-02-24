@@ -9,9 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRisk, useUpdateRisk, useDeleteRisk } from "@/hooks/use-api";
 import { ArrowLeft, Shield, Pencil, Trash2, Loader2, Save, X } from "lucide-react";
+import { useOrgId } from "@/hooks/use-org-id";
 import type { RiskLevel, RiskStatus } from "@/lib/types";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const riskLevelColor: Record<RiskLevel, string> = {
   critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
@@ -62,10 +61,11 @@ interface EditFormState {
 export default function RiskDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const orgId = useOrgId();
   const riskId = params.id as string;
-  const { data: risk, isLoading } = useRisk(DEMO_ORG_ID, riskId);
-  const updateRisk = useUpdateRisk(DEMO_ORG_ID);
-  const deleteRisk = useDeleteRisk(DEMO_ORG_ID);
+  const { data: risk, isLoading } = useRisk(orgId, riskId);
+  const updateRisk = useUpdateRisk(orgId);
+  const deleteRisk = useDeleteRisk(orgId);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<EditFormState>({

@@ -12,9 +12,8 @@ import {
   useTrainingAssignments,
   useTrainingStats,
 } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { GraduationCap, BookOpen, Users, Plus, Loader2 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 type TabValue = "courses" | "assignments";
 
@@ -36,16 +35,17 @@ const assignmentStatusColor: Record<string, string> = {
 };
 
 export default function TrainingPage() {
+  const orgId = useOrgId();
   const [activeTab, setActiveTab] = useState<TabValue>("courses");
   const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<
     string | undefined
   >(undefined);
 
   const { data: coursesData, isLoading: coursesLoading } =
-    useTrainingCourses(DEMO_ORG_ID);
+    useTrainingCourses(orgId);
   const { data: assignmentsData, isLoading: assignmentsLoading } =
-    useTrainingAssignments(DEMO_ORG_ID, { status: assignmentStatusFilter });
-  const { data: stats } = useTrainingStats(DEMO_ORG_ID);
+    useTrainingAssignments(orgId, { status: assignmentStatusFilter });
+  const { data: stats } = useTrainingStats(orgId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -55,7 +55,7 @@ export default function TrainingPage() {
     duration_minutes: 30,
     is_required: false,
   });
-  const createCourse = useCreateTrainingCourse(DEMO_ORG_ID);
+  const createCourse = useCreateTrainingCourse(orgId);
 
   const resetForm = () =>
     setForm({
@@ -94,7 +94,7 @@ export default function TrainingPage() {
         <div className="grid grid-cols-4 gap-4">
           {[
             { label: "Total Courses", value: stats.total_courses ?? 0 },
-            { label: "Assignments", value: stats.total_assignments ?? 0 },
+            { label: "Assignments", value: stats.assigned ?? 0 },
             { label: "Completed", value: stats.completed ?? 0 },
             { label: "Overdue", value: stats.overdue ?? 0 },
           ].map((s) => (

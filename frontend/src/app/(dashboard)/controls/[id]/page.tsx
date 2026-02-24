@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useControl, useEvidence } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { Shield, FileCheck, ChevronDown, ChevronUp } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const testResultVariant: Record<string, "success" | "destructive" | "secondary"> = {
   pass: "success",
@@ -19,10 +18,11 @@ const testResultVariant: Record<string, "success" | "destructive" | "secondary">
 
 export default function ControlDetailPage() {
   const params = useParams();
+  const orgId = useOrgId();
   const controlId = params.id as string;
-  const { data: control, isLoading } = useControl(DEMO_ORG_ID, controlId);
+  const { data: control, isLoading } = useControl(orgId, controlId);
   const { data: evidenceData, isLoading: evidenceLoading } = useEvidence(
-    DEMO_ORG_ID,
+    orgId,
     { control_id: controlId }
   );
   const [showProcedure, setShowProcedure] = useState(false);

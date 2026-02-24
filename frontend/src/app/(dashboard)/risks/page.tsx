@@ -7,10 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRisks, useCreateRisk } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { AlertTriangle, Grid3X3, Plus, Loader2 } from "lucide-react";
 import type { RiskLevel, RiskStatus } from "@/lib/types";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const STATUS_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All", value: undefined },
@@ -52,9 +51,10 @@ const statusVariant: Record<RiskStatus, "default" | "secondary" | "success" | "o
 };
 
 export default function RisksPage() {
+  const orgId = useOrgId();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [riskLevelFilter, setRiskLevelFilter] = useState<string | undefined>(undefined);
-  const { data, isLoading } = useRisks(DEMO_ORG_ID, {
+  const { data, isLoading } = useRisks(orgId, {
     status: statusFilter,
     risk_level: riskLevelFilter,
   });
@@ -68,7 +68,7 @@ export default function RisksPage() {
     impact: 3,
   });
 
-  const createRisk = useCreateRisk(DEMO_ORG_ID);
+  const createRisk = useCreateRisk(orgId);
 
   const resetForm = () =>
     setForm({ title: "", description: "", category: "operational", likelihood: 3, impact: 3 });

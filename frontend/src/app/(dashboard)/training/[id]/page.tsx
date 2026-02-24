@@ -23,8 +23,7 @@ import {
   GraduationCap,
   Users,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 const assignmentStatusColor: Record<string, string> = {
   assigned: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
@@ -36,18 +35,19 @@ const assignmentStatusColor: Record<string, string> = {
 };
 
 export default function TrainingCourseDetailPage() {
+  const orgId = useOrgId();
   const params = useParams();
   const router = useRouter();
   const courseId = params.id as string;
 
   const { data: course, isLoading } = useTrainingCourse(
-    DEMO_ORG_ID,
+    orgId,
     courseId
   );
   const { data: assignmentsData, isLoading: assignmentsLoading } =
-    useTrainingAssignments(DEMO_ORG_ID, { course_id: courseId });
-  const updateCourse = useUpdateTrainingCourse(DEMO_ORG_ID);
-  const deleteCourse = useDeleteTrainingCourse(DEMO_ORG_ID);
+    useTrainingAssignments(orgId, { course_id: courseId });
+  const updateCourse = useUpdateTrainingCourse(orgId);
+  const deleteCourse = useDeleteTrainingCourse(orgId);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({

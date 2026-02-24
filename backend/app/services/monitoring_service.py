@@ -79,6 +79,28 @@ async def run_checks(db: AsyncSession, org_id: UUID, rule_id: UUID) -> list[Moni
     now = datetime.now(timezone.utc)
     alerts_created: list[MonitorAlert] = []
 
+    try:
+        return await _execute_checks(db, rule, org_id, now, alerts_created)
+    except Exception as e:
+        alert = MonitorAlert(
+            org_id=org_id,
+            rule_id=rule.id,
+            severity="critical",
+            title=f"Check execution failed: {type(e).__name__}",
+            details={"error": str(e)},
+            triggered_at=now,
+        )
+        db.add(alert)
+        rule.last_result = "error"
+        rule.last_checked_at = now
+        await db.commit()
+        await db.refresh(alert)
+        return [alert]
+
+
+async def _execute_checks(
+    db: AsyncSession, rule: MonitorRule, org_id: UUID, now, alerts_created: list[MonitorAlert]
+) -> list[MonitorAlert]:
     if rule.check_type == "evidence_staleness":
         staleness_days = (rule.config or {}).get("staleness_days", 90)
         threshold = now - timedelta(days=staleness_days)

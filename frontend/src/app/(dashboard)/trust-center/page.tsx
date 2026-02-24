@@ -11,6 +11,7 @@ import {
   useTrustCenterDocuments,
   useCreateTrustCenterDocument,
 } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import {
   Globe,
   FileText,
@@ -20,8 +21,6 @@ import {
   ExternalLink,
   Shield,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const docTypeBadge: Record<string, string> = {
   policy:
@@ -34,12 +33,13 @@ const docTypeBadge: Record<string, string> = {
 };
 
 export default function TrustCenterPage() {
+  const orgId = useOrgId();
   const { data: config, isLoading: configLoading } =
-    useTrustCenterConfig(DEMO_ORG_ID);
+    useTrustCenterConfig(orgId);
   const { data: documents, isLoading: docsLoading } =
-    useTrustCenterDocuments(DEMO_ORG_ID);
-  const updateConfig = useUpdateTrustCenterConfig(DEMO_ORG_ID);
-  const createDocument = useCreateTrustCenterDocument(DEMO_ORG_ID);
+    useTrustCenterDocuments(orgId);
+  const updateConfig = useUpdateTrustCenterConfig(orgId);
+  const createDocument = useCreateTrustCenterDocument(orgId);
 
   const [configForm, setConfigForm] = useState({
     is_published: false,

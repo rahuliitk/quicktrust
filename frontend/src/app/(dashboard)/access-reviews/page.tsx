@@ -12,9 +12,8 @@ import {
   useCreateAccessReviewCampaign,
   useAccessReviewStats,
 } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { ShieldCheck, Plus, Loader2 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const STATUS_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All", value: undefined },
@@ -33,13 +32,14 @@ const statusColor: Record<string, string> = {
 };
 
 export default function AccessReviewsPage() {
+  const orgId = useOrgId();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(
     undefined
   );
-  const { data, isLoading } = useAccessReviewCampaigns(DEMO_ORG_ID, {
+  const { data, isLoading } = useAccessReviewCampaigns(orgId, {
     status: statusFilter,
   });
-  const { data: stats } = useAccessReviewStats(DEMO_ORG_ID);
+  const { data: stats } = useAccessReviewStats(orgId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -47,7 +47,7 @@ export default function AccessReviewsPage() {
     description: "",
     due_date: "",
   });
-  const createCampaign = useCreateAccessReviewCampaign(DEMO_ORG_ID);
+  const createCampaign = useCreateAccessReviewCampaign(orgId);
 
   const resetForm = () =>
     setForm({ title: "", description: "", due_date: "" });
@@ -89,9 +89,9 @@ export default function AccessReviewsPage() {
       {stats && (
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "Total Campaigns", value: stats.total ?? 0 },
-            { label: "Active", value: stats.active ?? 0 },
-            { label: "Completed", value: stats.completed ?? 0 },
+            { label: "Total Campaigns", value: stats.total_campaigns ?? 0 },
+            { label: "Active", value: stats.active_campaigns ?? 0 },
+            { label: "Pending Decisions", value: stats.pending_decisions ?? 0 },
             { label: "Total Entries", value: stats.total_entries ?? 0 },
           ].map((s) => (
             <Card key={s.label}>

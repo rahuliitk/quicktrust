@@ -24,8 +24,8 @@ import {
   Clock,
   Plus,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
+import type { IncidentSeverity, IncidentStatus } from "@/lib/types";
 
 const severityColor: Record<string, string> = {
   P1: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
@@ -56,16 +56,17 @@ const eventTypeColor: Record<string, string> = {
 export default function IncidentDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const orgId = useOrgId();
   const incidentId = params.id as string;
 
-  const { data: incident, isLoading } = useIncident(DEMO_ORG_ID, incidentId);
+  const { data: incident, isLoading } = useIncident(orgId, incidentId);
   const { data: timeline, isLoading: timelineLoading } = useIncidentTimeline(
-    DEMO_ORG_ID,
+    orgId,
     incidentId
   );
-  const updateIncident = useUpdateIncident(DEMO_ORG_ID);
-  const deleteIncident = useDeleteIncident(DEMO_ORG_ID);
-  const addTimelineEvent = useAddTimelineEvent(DEMO_ORG_ID, incidentId);
+  const updateIncident = useUpdateIncident(orgId);
+  const deleteIncident = useDeleteIncident(orgId);
+  const addTimelineEvent = useAddTimelineEvent(orgId, incidentId);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -96,7 +97,7 @@ export default function IncidentDetailPage() {
   function handleSave() {
     if (!incident) return;
     updateIncident.mutate(
-      { incidentId: incident.id, ...form },
+      { incidentId: incident.id, ...form, severity: form.severity as IncidentSeverity, status: form.status as IncidentStatus },
       { onSuccess: () => setEditing(false) }
     );
   }

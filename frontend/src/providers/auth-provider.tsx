@@ -18,6 +18,7 @@ interface AuthContextType {
     name: string;
     email: string;
     roles: string[];
+    org_id: string | null;
   } | null;
   login: () => void;
   logout: () => void;
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: kc.tokenParsed?.name || kc.tokenParsed?.preferred_username || "",
           email: kc.tokenParsed?.email || "",
           roles: kc.tokenParsed?.realm_roles || [],
+          org_id: kc.tokenParsed?.org_id || null,
         });
 
         // Token refresh interval

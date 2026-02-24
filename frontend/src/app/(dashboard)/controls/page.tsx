@@ -7,10 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useControls, useBulkApprove } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import type { ControlStatus } from "@/lib/types";
-import { CheckCircle, ListChecks } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { CheckCircle, ListChecks, AlertTriangle } from "lucide-react";
 
 const statusColors: Record<ControlStatus, string> = {
   draft: "secondary",
@@ -21,10 +20,11 @@ const statusColors: Record<ControlStatus, string> = {
 };
 
 export default function ControlsPage() {
+  const orgId = useOrgId();
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const { data, isLoading } = useControls(DEMO_ORG_ID, { status: statusFilter });
-  const bulkApprove = useBulkApprove(DEMO_ORG_ID);
+  const { data, isLoading, error } = useControls(orgId, { status: statusFilter });
+  const bulkApprove = useBulkApprove(orgId);
 
   const controls = data?.items || [];
 
@@ -52,6 +52,29 @@ export default function ControlsPage() {
     { label: "Partial", value: "partially_implemented" },
     { label: "Not Implemented", value: "not_implemented" },
   ];
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Controls</h1>
+          <p className="text-muted-foreground">Manage your organization's security controls</p>
+        </div>
+        <Card className="border-destructive">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold">Failed to load controls</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {error.message || "An unexpected error occurred. Please try again later."}
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

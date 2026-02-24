@@ -23,8 +23,7 @@ import {
   CheckCircle,
   ExternalLink,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 const statusColor: Record<string, string> = {
   draft: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100",
@@ -43,17 +42,18 @@ const confidenceColor: Record<string, string> = {
 };
 
 export default function QuestionnaireDetailPage() {
+  const orgId = useOrgId();
   const params = useParams();
   const router = useRouter();
   const questionnaireId = params.id as string;
 
   const { data: questionnaire, isLoading } = useQuestionnaire(
-    DEMO_ORG_ID,
+    orgId,
     questionnaireId
   );
-  const updateQuestionnaire = useUpdateQuestionnaire(DEMO_ORG_ID);
-  const deleteQuestionnaire = useDeleteQuestionnaire(DEMO_ORG_ID);
-  const autoFill = useAutoFillQuestionnaire(DEMO_ORG_ID);
+  const updateQuestionnaire = useUpdateQuestionnaire(orgId);
+  const deleteQuestionnaire = useDeleteQuestionnaire(orgId);
+  const autoFill = useAutoFillQuestionnaire(orgId);
 
   // Track answer edits by question index
   const [editedAnswers, setEditedAnswers] = useState<Record<number, string>>(

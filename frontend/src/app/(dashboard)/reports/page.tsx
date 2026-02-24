@@ -6,14 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useReports, useCreateReport, useReportStats } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import {
   FileBarChart,
   Plus,
   Loader2,
   ExternalLink,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const TYPE_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All Types", value: undefined },
@@ -52,15 +51,16 @@ const typeColor: Record<string, string> = {
 };
 
 export default function ReportsPage() {
+  const orgId = useOrgId();
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(
     undefined
   );
-  const { data, isLoading } = useReports(DEMO_ORG_ID, {
+  const { data, isLoading } = useReports(orgId, {
     report_type: typeFilter,
     status: statusFilter,
   });
-  const { data: stats } = useReportStats(DEMO_ORG_ID);
+  const { data: stats } = useReportStats(orgId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -68,7 +68,7 @@ export default function ReportsPage() {
     report_type: "compliance_summary",
     format: "json",
   });
-  const createReport = useCreateReport(DEMO_ORG_ID);
+  const createReport = useCreateReport(orgId);
 
   const resetForm = () =>
     setForm({ title: "", report_type: "compliance_summary", format: "json" });
@@ -104,9 +104,9 @@ export default function ReportsPage() {
         <div className="grid grid-cols-4 gap-4">
           {[
             { label: "Total Reports", value: stats.total ?? 0 },
-            { label: "Completed", value: stats.completed ?? 0 },
-            { label: "Pending", value: stats.pending ?? 0 },
-            { label: "Failed", value: stats.failed ?? 0 },
+            { label: "Completed", value: stats.by_status?.completed ?? 0 },
+            { label: "Pending", value: stats.by_status?.pending ?? 0 },
+            { label: "Failed", value: stats.by_status?.failed ?? 0 },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4 text-center">

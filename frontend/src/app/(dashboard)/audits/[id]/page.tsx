@@ -26,9 +26,8 @@ import {
   Copy,
   Ban,
 } from "lucide-react";
+import { useOrgId } from "@/hooks/use-org-id";
 import type { AuditStatus } from "@/lib/types";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 type TabValue = "overview" | "findings" | "tokens";
 
@@ -57,16 +56,17 @@ const findingStatusVariant: Record<string, "default" | "secondary" | "success" |
 
 export default function AuditDetailPage() {
   const params = useParams();
+  const orgId = useOrgId();
   const auditId = params.id as string;
   const [activeTab, setActiveTab] = useState<TabValue>("overview");
 
-  const { data: audit, isLoading } = useAudit(DEMO_ORG_ID, auditId);
+  const { data: audit, isLoading } = useAudit(orgId, auditId);
   const { data: findings, isLoading: findingsLoading } = useAuditFindings(
-    DEMO_ORG_ID,
+    orgId,
     auditId
   );
   const { data: tokens, isLoading: tokensLoading } = useAuditTokens(
-    DEMO_ORG_ID,
+    orgId,
     auditId
   );
 
@@ -152,10 +152,10 @@ export default function AuditDetailPage() {
       {/* Tab content */}
       {activeTab === "overview" && <OverviewTab audit={audit} />}
       {activeTab === "findings" && (
-        <FindingsTab findings={findings || []} isLoading={findingsLoading} auditId={auditId} />
+        <FindingsTab findings={findings || []} isLoading={findingsLoading} auditId={auditId} orgId={orgId} />
       )}
       {activeTab === "tokens" && (
-        <TokensTab tokens={tokens || []} isLoading={tokensLoading} auditId={auditId} />
+        <TokensTab tokens={tokens || []} isLoading={tokensLoading} auditId={auditId} orgId={orgId} />
       )}
     </div>
   );
@@ -275,14 +275,16 @@ function FindingsTab({
   findings,
   isLoading,
   auditId,
+  orgId,
 }: {
   findings: NonNullable<ReturnType<typeof useAuditFindings>["data"]>;
   isLoading: boolean;
   auditId: string;
+  orgId: string;
 }) {
   const [showAddFinding, setShowAddFinding] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", severity: "medium" });
-  const createFinding = useCreateFinding(DEMO_ORG_ID, auditId);
+  const createFinding = useCreateFinding(orgId, auditId);
 
   if (isLoading) {
     return (
@@ -457,16 +459,18 @@ function TokensTab({
   tokens,
   isLoading,
   auditId,
+  orgId,
 }: {
   tokens: NonNullable<ReturnType<typeof useAuditTokens>["data"]>;
   isLoading: boolean;
   auditId: string;
+  orgId: string;
 }) {
   const [showCreate, setShowCreate] = useState(false);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [form, setForm] = useState({ auditor_email: "", auditor_name: "", expires_in_days: 30 });
-  const createToken = useCreateToken(DEMO_ORG_ID, auditId);
-  const revokeToken = useRevokeToken(DEMO_ORG_ID, auditId);
+  const createToken = useCreateToken(orgId, auditId);
+  const revokeToken = useRevokeToken(orgId, auditId);
 
   if (isLoading) {
     return (

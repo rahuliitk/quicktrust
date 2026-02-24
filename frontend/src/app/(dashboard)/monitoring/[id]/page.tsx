@@ -23,8 +23,7 @@ import {
   Activity,
   Bell,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 const severityColor: Record<string, string> = {
   critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
@@ -43,17 +42,18 @@ const alertStatusColor: Record<string, string> = {
 };
 
 export default function MonitorRuleDetailPage() {
+  const orgId = useOrgId();
   const params = useParams();
   const router = useRouter();
   const ruleId = params.id as string;
 
-  const { data: rule, isLoading } = useMonitorRule(DEMO_ORG_ID, ruleId);
+  const { data: rule, isLoading } = useMonitorRule(orgId, ruleId);
   const { data: alertsData, isLoading: alertsLoading } = useMonitorAlerts(
-    DEMO_ORG_ID,
+    orgId,
     { rule_id: ruleId }
   );
-  const updateRule = useUpdateMonitorRule(DEMO_ORG_ID);
-  const deleteRule = useDeleteMonitorRule(DEMO_ORG_ID);
+  const updateRule = useUpdateMonitorRule(orgId);
+  const deleteRule = useDeleteMonitorRule(orgId);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -311,12 +311,12 @@ export default function MonitorRuleDetailPage() {
                   No custom configuration set.
                 </p>
               )}
-              {rule.last_run_at && (
+              {rule.last_checked_at && (
                 <div className="mt-4 text-sm">
                   <span className="font-medium text-muted-foreground">
                     Last Run:{" "}
                   </span>
-                  {new Date(rule.last_run_at).toLocaleString()}
+                  {new Date(rule.last_checked_at).toLocaleString()}
                 </div>
               )}
             </CardContent>

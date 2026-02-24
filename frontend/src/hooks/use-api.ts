@@ -28,6 +28,27 @@ import type {
   ReadinessScore,
   OnboardingSession,
   OnboardingWizardInput,
+  Incident,
+  IncidentStats,
+  IncidentTimelineEvent,
+  Vendor,
+  VendorStats,
+  VendorAssessment,
+  TrainingCourse,
+  TrainingAssignment,
+  TrainingStats,
+  AccessReviewCampaign,
+  AccessReviewEntry,
+  AccessReviewStats,
+  MonitorRule,
+  MonitorAlert,
+  MonitoringStats,
+  Questionnaire,
+  QuestionnaireStats,
+  TrustCenterConfig,
+  TrustCenterDocument,
+  Report,
+  ReportStats,
 } from "@/lib/types";
 
 // Frameworks
@@ -607,7 +628,7 @@ export function useIncidents(orgId: string, params?: { status?: string; severity
   return useQuery({
     queryKey: ["incidents", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<Incident>>(
         `/organizations/${orgId}/incidents${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -617,7 +638,7 @@ export function useIncidents(orgId: string, params?: { status?: string; severity
 export function useIncident(orgId: string, incidentId: string) {
   return useQuery({
     queryKey: ["incidents", orgId, incidentId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/incidents/${incidentId}`),
+    queryFn: () => api.get<Incident>(`/organizations/${orgId}/incidents/${incidentId}`),
     enabled: !!orgId && !!incidentId,
   });
 }
@@ -625,7 +646,7 @@ export function useIncident(orgId: string, incidentId: string) {
 export function useIncidentStats(orgId: string) {
   return useQuery({
     queryKey: ["incident-stats", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/incidents/stats`),
+    queryFn: () => api.get<IncidentStats>(`/organizations/${orgId}/incidents/stats`),
     enabled: !!orgId,
   });
 }
@@ -633,8 +654,8 @@ export function useIncidentStats(orgId: string) {
 export function useCreateIncident(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) =>
-      api.post<any>(`/organizations/${orgId}/incidents`, data),
+    mutationFn: (data: Partial<Incident>) =>
+      api.post<Incident>(`/organizations/${orgId}/incidents`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["incidents", orgId] });
       qc.invalidateQueries({ queryKey: ["incident-stats", orgId] });
@@ -645,8 +666,8 @@ export function useCreateIncident(orgId: string) {
 export function useUpdateIncident(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ incidentId, ...data }: { incidentId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/incidents/${incidentId}`, data),
+    mutationFn: ({ incidentId, ...data }: { incidentId: string } & Partial<Incident>) =>
+      api.patch<Incident>(`/organizations/${orgId}/incidents/${incidentId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["incidents", orgId] });
       qc.invalidateQueries({ queryKey: ["incident-stats", orgId] });
@@ -670,7 +691,7 @@ export function useIncidentTimeline(orgId: string, incidentId: string) {
   return useQuery({
     queryKey: ["incident-timeline", orgId, incidentId],
     queryFn: () =>
-      api.get<any[]>(`/organizations/${orgId}/incidents/${incidentId}/timeline`),
+      api.get<IncidentTimelineEvent[]>(`/organizations/${orgId}/incidents/${incidentId}/timeline`),
     enabled: !!orgId && !!incidentId,
   });
 }
@@ -679,7 +700,7 @@ export function useAddTimelineEvent(orgId: string, incidentId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { event_type: string; description: string }) =>
-      api.post<any>(`/organizations/${orgId}/incidents/${incidentId}/timeline`, data),
+      api.post<IncidentTimelineEvent>(`/organizations/${orgId}/incidents/${incidentId}/timeline`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["incident-timeline", orgId, incidentId] });
     },
@@ -698,7 +719,7 @@ export function useVendors(orgId: string, params?: { risk_tier?: string; status?
   return useQuery({
     queryKey: ["vendors", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<Vendor>>(
         `/organizations/${orgId}/vendors${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -708,7 +729,7 @@ export function useVendors(orgId: string, params?: { risk_tier?: string; status?
 export function useVendor(orgId: string, vendorId: string) {
   return useQuery({
     queryKey: ["vendors", orgId, vendorId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/vendors/${vendorId}`),
+    queryFn: () => api.get<Vendor>(`/organizations/${orgId}/vendors/${vendorId}`),
     enabled: !!orgId && !!vendorId,
   });
 }
@@ -716,7 +737,7 @@ export function useVendor(orgId: string, vendorId: string) {
 export function useVendorStats(orgId: string) {
   return useQuery({
     queryKey: ["vendor-stats", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/vendors/stats`),
+    queryFn: () => api.get<VendorStats>(`/organizations/${orgId}/vendors/stats`),
     enabled: !!orgId,
   });
 }
@@ -724,8 +745,8 @@ export function useVendorStats(orgId: string) {
 export function useCreateVendor(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) =>
-      api.post<any>(`/organizations/${orgId}/vendors`, data),
+    mutationFn: (data: Partial<Vendor>) =>
+      api.post<Vendor>(`/organizations/${orgId}/vendors`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["vendors", orgId] });
       qc.invalidateQueries({ queryKey: ["vendor-stats", orgId] });
@@ -736,8 +757,8 @@ export function useCreateVendor(orgId: string) {
 export function useUpdateVendor(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ vendorId, ...data }: { vendorId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/vendors/${vendorId}`, data),
+    mutationFn: ({ vendorId, ...data }: { vendorId: string } & Partial<Vendor>) =>
+      api.patch<Vendor>(`/organizations/${orgId}/vendors/${vendorId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["vendors", orgId] });
       qc.invalidateQueries({ queryKey: ["vendor-stats", orgId] });
@@ -761,7 +782,7 @@ export function useVendorAssessments(orgId: string, vendorId: string) {
   return useQuery({
     queryKey: ["vendor-assessments", orgId, vendorId],
     queryFn: () =>
-      api.get<any[]>(`/organizations/${orgId}/vendors/${vendorId}/assessments`),
+      api.get<VendorAssessment[]>(`/organizations/${orgId}/vendors/${vendorId}/assessments`),
     enabled: !!orgId && !!vendorId,
   });
 }
@@ -770,7 +791,7 @@ export function useCreateVendorAssessment(orgId: string, vendorId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { score: number; risk_tier_assigned: string; notes?: string }) =>
-      api.post<any>(`/organizations/${orgId}/vendors/${vendorId}/assessments`, data),
+      api.post<VendorAssessment>(`/organizations/${orgId}/vendors/${vendorId}/assessments`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["vendor-assessments", orgId, vendorId] });
       qc.invalidateQueries({ queryKey: ["vendors", orgId] });
@@ -788,7 +809,7 @@ export function useTrainingCourses(orgId: string, params?: { page?: number }) {
   return useQuery({
     queryKey: ["training-courses", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<TrainingCourse>>(
         `/organizations/${orgId}/training/courses${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -799,7 +820,7 @@ export function useTrainingCourse(orgId: string, courseId: string) {
   return useQuery({
     queryKey: ["training-courses", orgId, courseId],
     queryFn: () =>
-      api.get<any>(`/organizations/${orgId}/training/courses/${courseId}`),
+      api.get<TrainingCourse>(`/organizations/${orgId}/training/courses/${courseId}`),
     enabled: !!orgId && !!courseId,
   });
 }
@@ -807,8 +828,8 @@ export function useTrainingCourse(orgId: string, courseId: string) {
 export function useCreateTrainingCourse(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) =>
-      api.post<any>(`/organizations/${orgId}/training/courses`, data),
+    mutationFn: (data: Partial<TrainingCourse>) =>
+      api.post<TrainingCourse>(`/organizations/${orgId}/training/courses`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["training-courses", orgId] });
       qc.invalidateQueries({ queryKey: ["training-stats", orgId] });
@@ -819,8 +840,8 @@ export function useCreateTrainingCourse(orgId: string) {
 export function useUpdateTrainingCourse(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ courseId, ...data }: { courseId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/training/courses/${courseId}`, data),
+    mutationFn: ({ courseId, ...data }: { courseId: string } & Partial<TrainingCourse>) =>
+      api.patch<TrainingCourse>(`/organizations/${orgId}/training/courses/${courseId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["training-courses", orgId] });
       qc.invalidateQueries({ queryKey: ["training-stats", orgId] });
@@ -850,7 +871,7 @@ export function useTrainingAssignments(orgId: string, params?: { status?: string
   return useQuery({
     queryKey: ["training-assignments", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<TrainingAssignment>>(
         `/organizations/${orgId}/training/assignments${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -860,7 +881,7 @@ export function useTrainingAssignments(orgId: string, params?: { status?: string
 export function useTrainingStats(orgId: string) {
   return useQuery({
     queryKey: ["training-stats", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/training/stats`),
+    queryFn: () => api.get<TrainingStats>(`/organizations/${orgId}/training/stats`),
     enabled: !!orgId,
   });
 }
@@ -876,7 +897,7 @@ export function useAccessReviewCampaigns(orgId: string, params?: { status?: stri
   return useQuery({
     queryKey: ["access-review-campaigns", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<AccessReviewCampaign>>(
         `/organizations/${orgId}/access-reviews${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -887,7 +908,7 @@ export function useAccessReviewCampaign(orgId: string, campaignId: string) {
   return useQuery({
     queryKey: ["access-review-campaigns", orgId, campaignId],
     queryFn: () =>
-      api.get<any>(`/organizations/${orgId}/access-reviews/${campaignId}`),
+      api.get<AccessReviewCampaign>(`/organizations/${orgId}/access-reviews/${campaignId}`),
     enabled: !!orgId && !!campaignId,
   });
 }
@@ -895,7 +916,7 @@ export function useAccessReviewCampaign(orgId: string, campaignId: string) {
 export function useAccessReviewStats(orgId: string) {
   return useQuery({
     queryKey: ["access-review-stats", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/access-reviews/stats`),
+    queryFn: () => api.get<AccessReviewStats>(`/organizations/${orgId}/access-reviews/stats`),
     enabled: !!orgId,
   });
 }
@@ -904,7 +925,7 @@ export function useCreateAccessReviewCampaign(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { title: string; description?: string; due_date?: string }) =>
-      api.post<any>(`/organizations/${orgId}/access-reviews`, data),
+      api.post<AccessReviewCampaign>(`/organizations/${orgId}/access-reviews`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
       qc.invalidateQueries({ queryKey: ["access-review-stats", orgId] });
@@ -915,8 +936,8 @@ export function useCreateAccessReviewCampaign(orgId: string) {
 export function useUpdateAccessReviewCampaign(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ campaignId, ...data }: { campaignId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/access-reviews/${campaignId}`, data),
+    mutationFn: ({ campaignId, ...data }: { campaignId: string } & Partial<AccessReviewCampaign>) =>
+      api.patch<AccessReviewCampaign>(`/organizations/${orgId}/access-reviews/${campaignId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
       qc.invalidateQueries({ queryKey: ["access-review-stats", orgId] });
@@ -928,7 +949,7 @@ export function useAccessReviewEntries(orgId: string, campaignId: string) {
   return useQuery({
     queryKey: ["access-review-entries", orgId, campaignId],
     queryFn: () =>
-      api.get<any[]>(`/organizations/${orgId}/access-reviews/${campaignId}/entries`),
+      api.get<AccessReviewEntry[]>(`/organizations/${orgId}/access-reviews/${campaignId}/entries`),
     enabled: !!orgId && !!campaignId,
   });
 }
@@ -937,7 +958,7 @@ export function useCreateAccessReviewEntry(orgId: string, campaignId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { user_name: string; user_email: string; system_name: string; resource: string; current_access: string }) =>
-      api.post<any>(`/organizations/${orgId}/access-reviews/${campaignId}/entries`, data),
+      api.post<AccessReviewEntry>(`/organizations/${orgId}/access-reviews/${campaignId}/entries`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["access-review-entries", orgId, campaignId] });
       qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
@@ -948,8 +969,8 @@ export function useCreateAccessReviewEntry(orgId: string, campaignId: string) {
 export function useUpdateAccessReviewEntry(orgId: string, campaignId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ entryId, ...data }: { entryId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/access-reviews/${campaignId}/entries/${entryId}`, data),
+    mutationFn: ({ entryId, ...data }: { entryId: string; decision?: string; notes?: string }) =>
+      api.patch<AccessReviewEntry>(`/organizations/${orgId}/access-reviews/${campaignId}/entries/${entryId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["access-review-entries", orgId, campaignId] });
       qc.invalidateQueries({ queryKey: ["access-review-campaigns", orgId] });
@@ -969,7 +990,7 @@ export function useMonitorRules(orgId: string, params?: { check_type?: string; i
   return useQuery({
     queryKey: ["monitor-rules", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<MonitorRule>>(
         `/organizations/${orgId}/monitoring/rules${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -980,7 +1001,7 @@ export function useMonitorRule(orgId: string, ruleId: string) {
   return useQuery({
     queryKey: ["monitor-rules", orgId, ruleId],
     queryFn: () =>
-      api.get<any>(`/organizations/${orgId}/monitoring/rules/${ruleId}`),
+      api.get<MonitorRule>(`/organizations/${orgId}/monitoring/rules/${ruleId}`),
     enabled: !!orgId && !!ruleId,
   });
 }
@@ -988,8 +1009,8 @@ export function useMonitorRule(orgId: string, ruleId: string) {
 export function useCreateMonitorRule(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) =>
-      api.post<any>(`/organizations/${orgId}/monitoring/rules`, data),
+    mutationFn: (data: Partial<MonitorRule>) =>
+      api.post<MonitorRule>(`/organizations/${orgId}/monitoring/rules`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
       qc.invalidateQueries({ queryKey: ["monitoring-stats", orgId] });
@@ -1000,8 +1021,8 @@ export function useCreateMonitorRule(orgId: string) {
 export function useUpdateMonitorRule(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ ruleId, ...data }: { ruleId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/monitoring/rules/${ruleId}`, data),
+    mutationFn: ({ ruleId, ...data }: { ruleId: string } & Partial<MonitorRule>) =>
+      api.patch<MonitorRule>(`/organizations/${orgId}/monitoring/rules/${ruleId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
       qc.invalidateQueries({ queryKey: ["monitoring-stats", orgId] });
@@ -1025,7 +1046,7 @@ export function useRunMonitorRule(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (ruleId: string) =>
-      api.post<any>(`/organizations/${orgId}/monitoring/rules/${ruleId}/run`),
+      api.post<MonitorAlert[]>(`/organizations/${orgId}/monitoring/rules/${ruleId}/run`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monitor-rules", orgId] });
       qc.invalidateQueries({ queryKey: ["monitor-alerts", orgId] });
@@ -1044,7 +1065,7 @@ export function useMonitorAlerts(orgId: string, params?: { status?: string; seve
   return useQuery({
     queryKey: ["monitor-alerts", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<MonitorAlert>>(
         `/organizations/${orgId}/monitoring/alerts${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -1054,8 +1075,8 @@ export function useMonitorAlerts(orgId: string, params?: { status?: string; seve
 export function useUpdateMonitorAlert(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ alertId, ...data }: { alertId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/monitoring/alerts/${alertId}`, data),
+    mutationFn: ({ alertId, ...data }: { alertId: string; status?: string }) =>
+      api.patch<MonitorAlert>(`/organizations/${orgId}/monitoring/alerts/${alertId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monitor-alerts", orgId] });
       qc.invalidateQueries({ queryKey: ["monitoring-stats", orgId] });
@@ -1066,7 +1087,7 @@ export function useUpdateMonitorAlert(orgId: string) {
 export function useMonitoringStats(orgId: string) {
   return useQuery({
     queryKey: ["monitoring-stats", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/monitoring/stats`),
+    queryFn: () => api.get<MonitoringStats>(`/organizations/${orgId}/monitoring/stats`),
     enabled: !!orgId,
   });
 }
@@ -1082,7 +1103,7 @@ export function useQuestionnaires(orgId: string, params?: { status?: string; pag
   return useQuery({
     queryKey: ["questionnaires", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<Questionnaire>>(
         `/organizations/${orgId}/questionnaires${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -1093,7 +1114,7 @@ export function useQuestionnaire(orgId: string, questionnaireId: string) {
   return useQuery({
     queryKey: ["questionnaires", orgId, questionnaireId],
     queryFn: () =>
-      api.get<any>(`/organizations/${orgId}/questionnaires/${questionnaireId}`),
+      api.get<Questionnaire>(`/organizations/${orgId}/questionnaires/${questionnaireId}`),
     enabled: !!orgId && !!questionnaireId,
   });
 }
@@ -1101,7 +1122,7 @@ export function useQuestionnaire(orgId: string, questionnaireId: string) {
 export function useQuestionnaireStats(orgId: string) {
   return useQuery({
     queryKey: ["questionnaire-stats", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/questionnaires/stats`),
+    queryFn: () => api.get<QuestionnaireStats>(`/organizations/${orgId}/questionnaires/stats`),
     enabled: !!orgId,
   });
 }
@@ -1109,8 +1130,8 @@ export function useQuestionnaireStats(orgId: string) {
 export function useCreateQuestionnaire(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) =>
-      api.post<any>(`/organizations/${orgId}/questionnaires`, data),
+    mutationFn: (data: Partial<Questionnaire>) =>
+      api.post<Questionnaire>(`/organizations/${orgId}/questionnaires`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["questionnaires", orgId] });
       qc.invalidateQueries({ queryKey: ["questionnaire-stats", orgId] });
@@ -1121,8 +1142,8 @@ export function useCreateQuestionnaire(orgId: string) {
 export function useUpdateQuestionnaire(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ questionnaireId, ...data }: { questionnaireId: string } & Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/questionnaires/${questionnaireId}`, data),
+    mutationFn: ({ questionnaireId, ...data }: { questionnaireId: string } & Partial<Questionnaire>) =>
+      api.patch<Questionnaire>(`/organizations/${orgId}/questionnaires/${questionnaireId}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["questionnaires", orgId] });
       qc.invalidateQueries({ queryKey: ["questionnaire-stats", orgId] });
@@ -1146,7 +1167,7 @@ export function useAutoFillQuestionnaire(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (questionnaireId: string) =>
-      api.post<any>(`/organizations/${orgId}/questionnaires/${questionnaireId}/auto-fill`),
+      api.post<number>(`/organizations/${orgId}/questionnaires/${questionnaireId}/auto-fill`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["questionnaires", orgId] });
     },
@@ -1158,7 +1179,7 @@ export function useAutoFillQuestionnaire(orgId: string) {
 export function useTrustCenterConfig(orgId: string) {
   return useQuery({
     queryKey: ["trust-center-config", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/trust-center/config`),
+    queryFn: () => api.get<TrustCenterConfig>(`/organizations/${orgId}/trust-center/config`),
     enabled: !!orgId,
   });
 }
@@ -1166,8 +1187,8 @@ export function useTrustCenterConfig(orgId: string) {
 export function useUpdateTrustCenterConfig(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Record<string, any>) =>
-      api.patch<any>(`/organizations/${orgId}/trust-center/config`, data),
+    mutationFn: (data: Partial<TrustCenterConfig>) =>
+      api.patch<TrustCenterConfig>(`/organizations/${orgId}/trust-center/config`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["trust-center-config", orgId] });
     },
@@ -1177,7 +1198,7 @@ export function useUpdateTrustCenterConfig(orgId: string) {
 export function useTrustCenterDocuments(orgId: string) {
   return useQuery({
     queryKey: ["trust-center-documents", orgId],
-    queryFn: () => api.get<any[]>(`/organizations/${orgId}/trust-center/documents`),
+    queryFn: () => api.get<TrustCenterDocument[]>(`/organizations/${orgId}/trust-center/documents`),
     enabled: !!orgId,
   });
 }
@@ -1185,8 +1206,8 @@ export function useTrustCenterDocuments(orgId: string) {
 export function useCreateTrustCenterDocument(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) =>
-      api.post<any>(`/organizations/${orgId}/trust-center/documents`, data),
+    mutationFn: (data: Partial<TrustCenterDocument>) =>
+      api.post<TrustCenterDocument>(`/organizations/${orgId}/trust-center/documents`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["trust-center-documents", orgId] });
     },
@@ -1205,7 +1226,7 @@ export function useReports(orgId: string, params?: { report_type?: string; statu
   return useQuery({
     queryKey: ["reports", orgId, params],
     queryFn: () =>
-      api.get<PaginatedResponse<any>>(
+      api.get<PaginatedResponse<Report>>(
         `/organizations/${orgId}/reports${qs ? `?${qs}` : ""}`
       ),
     enabled: !!orgId,
@@ -1216,7 +1237,7 @@ export function useCreateReport(orgId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: { title: string; report_type: string; format: string }) =>
-      api.post<any>(`/organizations/${orgId}/reports`, data),
+      api.post<Report>(`/organizations/${orgId}/reports`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["reports", orgId] });
       qc.invalidateQueries({ queryKey: ["report-stats", orgId] });
@@ -1227,7 +1248,7 @@ export function useCreateReport(orgId: string) {
 export function useReportStats(orgId: string) {
   return useQuery({
     queryKey: ["report-stats", orgId],
-    queryFn: () => api.get<any>(`/organizations/${orgId}/reports/stats`),
+    queryFn: () => api.get<ReportStats>(`/organizations/${orgId}/reports/stats`),
     enabled: !!orgId,
   });
 }

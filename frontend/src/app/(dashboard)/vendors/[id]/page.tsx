@@ -25,8 +25,8 @@ import {
   Plus,
   Building2,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
+import type { VendorRiskTier, VendorStatus } from "@/lib/types";
 
 const riskTierColor: Record<string, string> = {
   critical: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
@@ -39,14 +39,15 @@ const riskTierColor: Record<string, string> = {
 export default function VendorDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const orgId = useOrgId();
   const vendorId = params.id as string;
 
-  const { data: vendor, isLoading } = useVendor(DEMO_ORG_ID, vendorId);
+  const { data: vendor, isLoading } = useVendor(orgId, vendorId);
   const { data: assessments, isLoading: assessmentsLoading } =
-    useVendorAssessments(DEMO_ORG_ID, vendorId);
-  const updateVendor = useUpdateVendor(DEMO_ORG_ID);
-  const deleteVendor = useDeleteVendor(DEMO_ORG_ID);
-  const createAssessment = useCreateVendorAssessment(DEMO_ORG_ID, vendorId);
+    useVendorAssessments(orgId, vendorId);
+  const updateVendor = useUpdateVendor(orgId);
+  const deleteVendor = useDeleteVendor(orgId);
+  const createAssessment = useCreateVendorAssessment(orgId, vendorId);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -59,8 +60,6 @@ export default function VendorDetailPage() {
     contact_email: "",
     contract_start_date: "",
     contract_end_date: "",
-    data_classification: "",
-    description: "",
   });
 
   const [showAddAssessment, setShowAddAssessment] = useState(false);
@@ -82,8 +81,6 @@ export default function VendorDetailPage() {
       contact_email: vendor.contact_email || "",
       contract_start_date: vendor.contract_start_date || "",
       contract_end_date: vendor.contract_end_date || "",
-      data_classification: vendor.data_classification || "",
-      description: vendor.description || "",
     });
     setEditing(true);
   }
@@ -91,7 +88,7 @@ export default function VendorDetailPage() {
   function handleSave() {
     if (!vendor) return;
     updateVendor.mutate(
-      { vendorId: vendor.id, ...form },
+      { vendorId: vendor.id, ...form, risk_tier: form.risk_tier as VendorRiskTier, status: form.status as VendorStatus },
       { onSuccess: () => setEditing(false) }
     );
   }
@@ -246,20 +243,6 @@ export default function VendorDetailPage() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">
-                  Data Classification
-                </label>
-                <input
-                  type="text"
-                  className="mt-1 w-full rounded-md border bg-background p-2 text-sm"
-                  placeholder="e.g. confidential, public"
-                  value={form.data_classification}
-                  onChange={(e) =>
-                    setForm({ ...form, data_classification: e.target.value })
-                  }
-                />
-              </div>
-              <div>
                 <label className="text-sm font-medium">Contact Name</label>
                 <input
                   type="text"
@@ -307,18 +290,6 @@ export default function VendorDetailPage() {
                   }
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <textarea
-                className="mt-1 w-full rounded-md border bg-background p-2 text-sm"
-                rows={3}
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-              />
             </div>
 
             <div className="flex items-center gap-2">
@@ -380,24 +351,6 @@ export default function VendorDetailPage() {
                     {vendor.contact_email && ` (${vendor.contact_email})`}
                   </dd>
                 </div>
-                {vendor.data_classification && (
-                  <div>
-                    <dt className="font-medium text-muted-foreground">
-                      Data Classification
-                    </dt>
-                    <dd className="mt-1 capitalize">
-                      {vendor.data_classification}
-                    </dd>
-                  </div>
-                )}
-                {vendor.description && (
-                  <div>
-                    <dt className="font-medium text-muted-foreground">
-                      Description
-                    </dt>
-                    <dd className="mt-1">{vendor.description}</dd>
-                  </div>
-                )}
               </dl>
             </CardContent>
           </Card>

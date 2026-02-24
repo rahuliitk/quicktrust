@@ -6,9 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProviders, useIntegrations } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { Plug, Unplug, Cable } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const statusVariant: Record<string, "success" | "secondary" | "destructive"> = {
   connected: "success",
@@ -17,9 +16,10 @@ const statusVariant: Record<string, "success" | "secondary" | "destructive"> = {
 };
 
 export default function IntegrationsPage() {
-  const { data: providers, isLoading: providersLoading } = useProviders(DEMO_ORG_ID);
+  const orgId = useOrgId();
+  const { data: providers, isLoading: providersLoading } = useProviders(orgId);
   const { data: integrationsData, isLoading: integrationsLoading } =
-    useIntegrations(DEMO_ORG_ID);
+    useIntegrations(orgId);
 
   const integrations = integrationsData?.items || [];
 

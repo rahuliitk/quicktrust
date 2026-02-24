@@ -8,10 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useAudits, useReadinessScore, useCreateAudit, useFrameworks } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { ClipboardCheck, ShieldCheck, Plus, Loader2 } from "lucide-react";
 import type { AuditStatus } from "@/lib/types";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const statusColors: Record<AuditStatus, string> = {
   planning: "secondary",
@@ -40,8 +39,8 @@ function ReadinessGauge({ score, label }: { score: number; label: string }) {
   );
 }
 
-function ReadinessPanel() {
-  const { data: readiness, isLoading } = useReadinessScore(DEMO_ORG_ID);
+function ReadinessPanel({ orgId }: { orgId: string }) {
+  const { data: readiness, isLoading } = useReadinessScore(orgId);
 
   if (isLoading) {
     return (
@@ -137,7 +136,8 @@ function ReadinessPanel() {
 }
 
 export default function AuditsPage() {
-  const { data, isLoading } = useAudits(DEMO_ORG_ID);
+  const orgId = useOrgId();
+  const { data, isLoading } = useAudits(orgId);
   const audits = data?.items || [];
 
   const [showCreate, setShowCreate] = useState(false);
@@ -148,7 +148,7 @@ export default function AuditsPage() {
     auditor_firm: "",
   });
 
-  const createAudit = useCreateAudit(DEMO_ORG_ID);
+  const createAudit = useCreateAudit(orgId);
   const { data: frameworks } = useFrameworks();
 
   const resetForm = () =>
@@ -265,7 +265,7 @@ export default function AuditsPage() {
       )}
 
       {/* Readiness gauge */}
-      <ReadinessPanel />
+      <ReadinessPanel orgId={orgId} />
 
       {/* Audit list */}
       {isLoading ? (

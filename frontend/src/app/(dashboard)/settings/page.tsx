@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrganization, useUpdateOrganization } from "@/hooks/use-api";
-import { Loader2, Save, Building } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
+import { Loader2, Save, Building, AlertTriangle } from "lucide-react";
 
 export default function SettingsPage() {
-  const { data: org, isLoading } = useOrganization(DEMO_ORG_ID);
-  const updateOrg = useUpdateOrganization(DEMO_ORG_ID);
+  const orgId = useOrgId();
+  const { data: org, isLoading, error } = useOrganization(orgId);
+  const updateOrg = useUpdateOrganization(orgId);
 
   const [form, setForm] = useState({
     name: "",
@@ -82,6 +82,29 @@ export default function SettingsPage() {
       <div className="space-y-4">
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">Manage your organization settings</p>
+        </div>
+        <Card className="border-destructive">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold">Failed to load settings</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {error.message || "An unexpected error occurred. Please try again later."}
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

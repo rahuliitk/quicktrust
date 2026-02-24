@@ -23,8 +23,7 @@ import {
   CheckCircle,
   Eye,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 type TabValue = "rules" | "alerts";
 
@@ -68,6 +67,7 @@ const alertStatusColor: Record<string, string> = {
 };
 
 export default function MonitoringPage() {
+  const orgId = useOrgId();
   const [activeTab, setActiveTab] = useState<TabValue>("rules");
   const [checkTypeFilter, setCheckTypeFilter] = useState<string | undefined>(
     undefined
@@ -83,14 +83,14 @@ export default function MonitoringPage() {
   >(undefined);
 
   const { data: rulesData, isLoading: rulesLoading } = useMonitorRules(
-    DEMO_ORG_ID,
+    orgId,
     { check_type: checkTypeFilter, is_active: activeFilter }
   );
   const { data: alertsData, isLoading: alertsLoading } = useMonitorAlerts(
-    DEMO_ORG_ID,
+    orgId,
     { status: alertStatusFilter, severity: alertSeverityFilter }
   );
-  const { data: stats } = useMonitoringStats(DEMO_ORG_ID);
+  const { data: stats } = useMonitoringStats(orgId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -99,9 +99,9 @@ export default function MonitoringPage() {
     schedule: "daily",
     is_active: true,
   });
-  const createRule = useCreateMonitorRule(DEMO_ORG_ID);
-  const runRule = useRunMonitorRule(DEMO_ORG_ID);
-  const updateAlert = useUpdateMonitorAlert(DEMO_ORG_ID);
+  const createRule = useCreateMonitorRule(orgId);
+  const runRule = useRunMonitorRule(orgId);
+  const updateAlert = useUpdateMonitorAlert(orgId);
 
   const resetForm = () =>
     setForm({ title: "", check_type: "policy", schedule: "daily", is_active: true });
@@ -133,10 +133,10 @@ export default function MonitoringPage() {
       {stats && (
         <div className="grid grid-cols-4 gap-4">
           {[
+            { label: "Total Rules", value: stats.total_rules ?? 0 },
             { label: "Active Rules", value: stats.active_rules ?? 0 },
             { label: "Open Alerts", value: stats.open_alerts ?? 0 },
-            { label: "Acknowledged", value: stats.acknowledged ?? 0 },
-            { label: "Resolved (30d)", value: stats.resolved_30d ?? 0 },
+            { label: "Critical", value: stats.by_severity?.critical ?? 0 },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4 text-center">

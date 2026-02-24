@@ -11,9 +11,9 @@ import {
   useIncidentStats,
   useCreateIncident,
 } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { AlertOctagon, Plus, Loader2 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import type { IncidentSeverity } from "@/lib/types";
 
 const STATUS_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All", value: undefined },
@@ -48,17 +48,18 @@ const statusColor: Record<string, string> = {
 };
 
 export default function IncidentsPage() {
+  const orgId = useOrgId();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(
     undefined
   );
   const [severityFilter, setSeverityFilter] = useState<string | undefined>(
     undefined
   );
-  const { data, isLoading } = useIncidents(DEMO_ORG_ID, {
+  const { data, isLoading } = useIncidents(orgId, {
     status: statusFilter,
     severity: severityFilter,
   });
-  const { data: stats } = useIncidentStats(DEMO_ORG_ID);
+  const { data: stats } = useIncidentStats(orgId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -67,18 +68,21 @@ export default function IncidentsPage() {
     category: "security",
     description: "",
   });
-  const createIncident = useCreateIncident(DEMO_ORG_ID);
+  const createIncident = useCreateIncident(orgId);
 
   const resetForm = () =>
     setForm({ title: "", severity: "P3", category: "security", description: "" });
 
   const handleCreate = () => {
-    createIncident.mutate(form, {
-      onSuccess: () => {
-        setShowCreate(false);
-        resetForm();
-      },
-    });
+    createIncident.mutate(
+      { ...form, severity: form.severity as IncidentSeverity },
+      {
+        onSuccess: () => {
+          setShowCreate(false);
+          resetForm();
+        },
+      }
+    );
   };
 
   const incidents = data?.items || [];
@@ -102,10 +106,10 @@ export default function IncidentsPage() {
       {stats && (
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "Open", value: stats.open ?? 0 },
-            { label: "Investigating", value: stats.investigating ?? 0 },
-            { label: "Resolved", value: stats.resolved ?? 0 },
-            { label: "Closed", value: stats.closed ?? 0 },
+            { label: "Open", value: stats.by_status?.open ?? 0 },
+            { label: "Investigating", value: stats.by_status?.investigating ?? 0 },
+            { label: "Resolved", value: stats.by_status?.resolved ?? 0 },
+            { label: "Closed", value: stats.by_status?.closed ?? 0 },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4 text-center">

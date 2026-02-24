@@ -6,9 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEvidence } from "@/hooks/use-api";
-import { Shield, FileCheck } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
+import { Shield, FileCheck, AlertTriangle } from "lucide-react";
 
 const STATUS_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All", value: undefined },
@@ -40,10 +39,11 @@ const methodBadgeVariant: Record<string, "default" | "secondary" | "outline"> = 
 };
 
 export default function EvidencePage() {
+  const orgId = useOrgId();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [methodFilter, setMethodFilter] = useState<string | undefined>(undefined);
 
-  const { data, isLoading } = useEvidence(DEMO_ORG_ID);
+  const { data, isLoading, error } = useEvidence(orgId);
 
   const allItems = data?.items || [];
 
@@ -53,6 +53,29 @@ export default function EvidencePage() {
     if (methodFilter && item.collection_method !== methodFilter) return false;
     return true;
   });
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Evidence Library</h1>
+          <p className="text-muted-foreground">Track evidence collection status</p>
+        </div>
+        <Card className="border-destructive">
+          <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+            <h3 className="text-lg font-semibold">Failed to load evidence</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              {error.message || "An unexpected error occurred. Please try again later."}
+            </p>
+            <Button className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

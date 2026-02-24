@@ -11,9 +11,9 @@ import {
   useVendorStats,
   useCreateVendor,
 } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { Building2, Plus, Loader2 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import type { VendorRiskTier } from "@/lib/types";
 
 const RISK_TIER_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All", value: undefined },
@@ -45,17 +45,18 @@ const statusVariant: Record<string, "default" | "secondary" | "success" | "destr
 };
 
 export default function VendorsPage() {
+  const orgId = useOrgId();
   const [riskTierFilter, setRiskTierFilter] = useState<string | undefined>(
     undefined
   );
   const [statusFilter, setStatusFilter] = useState<string | undefined>(
     undefined
   );
-  const { data, isLoading } = useVendors(DEMO_ORG_ID, {
+  const { data, isLoading } = useVendors(orgId, {
     risk_tier: riskTierFilter,
     status: statusFilter,
   });
-  const { data: stats } = useVendorStats(DEMO_ORG_ID);
+  const { data: stats } = useVendorStats(orgId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -66,7 +67,7 @@ export default function VendorsPage() {
     contact_name: "",
     contact_email: "",
   });
-  const createVendor = useCreateVendor(DEMO_ORG_ID);
+  const createVendor = useCreateVendor(orgId);
 
   const resetForm = () =>
     setForm({
@@ -79,12 +80,15 @@ export default function VendorsPage() {
     });
 
   const handleCreate = () => {
-    createVendor.mutate(form, {
-      onSuccess: () => {
-        setShowCreate(false);
-        resetForm();
-      },
-    });
+    createVendor.mutate(
+      { ...form, risk_tier: form.risk_tier as VendorRiskTier },
+      {
+        onSuccess: () => {
+          setShowCreate(false);
+          resetForm();
+        },
+      }
+    );
   };
 
   const vendors = data?.items || [];
@@ -109,9 +113,9 @@ export default function VendorsPage() {
         <div className="grid grid-cols-4 gap-4">
           {[
             { label: "Total", value: stats.total ?? 0 },
-            { label: "Critical", value: stats.critical ?? 0 },
-            { label: "High", value: stats.high ?? 0 },
-            { label: "Active", value: stats.active ?? 0 },
+            { label: "Critical", value: stats.by_risk_tier?.critical ?? 0 },
+            { label: "High", value: stats.by_risk_tier?.high ?? 0 },
+            { label: "Active", value: stats.by_status?.active ?? 0 },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4 text-center">

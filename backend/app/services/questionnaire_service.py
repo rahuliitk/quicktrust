@@ -168,8 +168,8 @@ async def auto_fill(db: AsyncSession, org_id: UUID, questionnaire_id: UUID) -> i
     policies = list(policies_result.scalars().all())
 
     filled = 0
-    for q in questions:
-        q_id = q.get("id", str(filled))
+    for idx, q in enumerate(questions):
+        q_id = q.get("id", f"q_{idx}")
         q_text = q.get("text", q.get("question", "")).lower()
         if not q_text:
             continue

@@ -27,8 +27,7 @@ import {
   XCircle,
   UserCheck,
 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 const statusColor: Record<string, string> = {
   draft: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100",
@@ -47,18 +46,19 @@ const decisionColor: Record<string, string> = {
 };
 
 export default function AccessReviewDetailPage() {
+  const orgId = useOrgId();
   const params = useParams();
   const campaignId = params.id as string;
 
   const { data: campaign, isLoading } = useAccessReviewCampaign(
-    DEMO_ORG_ID,
+    orgId,
     campaignId
   );
   const { data: entries, isLoading: entriesLoading } =
-    useAccessReviewEntries(DEMO_ORG_ID, campaignId);
-  const updateCampaign = useUpdateAccessReviewCampaign(DEMO_ORG_ID);
-  const createEntry = useCreateAccessReviewEntry(DEMO_ORG_ID, campaignId);
-  const updateEntry = useUpdateAccessReviewEntry(DEMO_ORG_ID, campaignId);
+    useAccessReviewEntries(orgId, campaignId);
+  const updateCampaign = useUpdateAccessReviewCampaign(orgId);
+  const createEntry = useCreateAccessReviewEntry(orgId, campaignId);
+  const updateEntry = useUpdateAccessReviewEntry(orgId, campaignId);
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({

@@ -26,8 +26,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import type { OnboardingSession } from "@/lib/types";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
+import { useOrgId } from "@/hooks/use-org-id";
 
 const STEPS = [
   { number: 1, title: "Company Info", icon: Building2 },
@@ -95,6 +94,7 @@ interface WizardFormState {
 }
 
 export default function OnboardingPage() {
+  const orgId = useOrgId();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -112,7 +112,7 @@ export default function OnboardingPage() {
   });
 
   const { data: frameworks, isLoading: frameworksLoading } = useFrameworks();
-  const startOnboarding = useStartOnboarding(DEMO_ORG_ID);
+  const startOnboarding = useStartOnboarding(orgId);
 
   function toggleMultiSelect(
     field: "cloud_providers" | "tech_stack" | "departments" | "target_framework_ids",

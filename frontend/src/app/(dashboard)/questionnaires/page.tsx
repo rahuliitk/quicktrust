@@ -12,9 +12,8 @@ import {
   useCreateQuestionnaire,
   useQuestionnaireStats,
 } from "@/hooks/use-api";
+import { useOrgId } from "@/hooks/use-org-id";
 import { ClipboardList, Plus, Loader2, Trash2 } from "lucide-react";
-
-const DEMO_ORG_ID = "00000000-0000-0000-0000-000000000000";
 
 const STATUS_FILTERS: { label: string; value: string | undefined }[] = [
   { label: "All", value: undefined },
@@ -39,13 +38,14 @@ interface QuestionInput {
 }
 
 export default function QuestionnairesPage() {
+  const orgId = useOrgId();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(
     undefined
   );
-  const { data, isLoading } = useQuestionnaires(DEMO_ORG_ID, {
+  const { data, isLoading } = useQuestionnaires(orgId, {
     status: statusFilter,
   });
-  const { data: stats } = useQuestionnaireStats(DEMO_ORG_ID);
+  const { data: stats } = useQuestionnaireStats(orgId);
 
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
@@ -55,7 +55,7 @@ export default function QuestionnairesPage() {
   const [questions, setQuestions] = useState<QuestionInput[]>([
     { question_text: "", question_type: "text" },
   ]);
-  const createQuestionnaire = useCreateQuestionnaire(DEMO_ORG_ID);
+  const createQuestionnaire = useCreateQuestionnaire(orgId);
 
   const resetForm = () => {
     setForm({ title: "", source: "" });
@@ -89,7 +89,7 @@ export default function QuestionnairesPage() {
       {
         title: form.title,
         source: form.source || undefined,
-        questions: validQuestions.length > 0 ? validQuestions : undefined,
+        questions: validQuestions.length > 0 ? validQuestions as unknown as Record<string, unknown>[] : undefined,
       },
       {
         onSuccess: () => {
@@ -124,7 +124,7 @@ export default function QuestionnairesPage() {
             { label: "Total", value: stats.total ?? 0 },
             { label: "In Progress", value: stats.in_progress ?? 0 },
             { label: "Completed", value: stats.completed ?? 0 },
-            { label: "Questions", value: stats.total_questions ?? 0 },
+            { label: "Submitted", value: stats.submitted ?? 0 },
           ].map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4 text-center">
