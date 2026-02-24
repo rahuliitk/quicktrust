@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
-from app.core.dependencies import DB, AnyInternalUser, ComplianceUser
+from app.core.dependencies import DB, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.schemas.common import MessageResponse
 from app.services import embedding_service
 
@@ -22,7 +22,7 @@ class SearchRequest(BaseModel):
 
 @router.post("/search")
 async def search_similar(
-    org_id: UUID, data: SearchRequest, db: DB, current_user: AnyInternalUser,
+    org_id: VerifiedOrgId, data: SearchRequest, db: DB, current_user: AnyInternalUser,
 ):
     """Semantic search across controls, policies, evidence, and risks."""
     return await embedding_service.search_similar(
@@ -35,7 +35,7 @@ async def search_similar(
 
 @router.post("/index/{entity_type}", response_model=MessageResponse)
 async def index_entities(
-    org_id: UUID, entity_type: str, db: DB, current_user: ComplianceUser,
+    org_id: VerifiedOrgId, entity_type: str, db: DB, current_user: ComplianceUser,
 ):
     """Bulk-index all entities of a given type for semantic search."""
     count = await embedding_service.index_entities(db, org_id, entity_type)

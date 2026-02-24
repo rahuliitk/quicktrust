@@ -2,7 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.audit_middleware import log_audit
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.schemas.common import PaginatedResponse
 from app.schemas.policy import (
     PolicyCreate,
@@ -17,7 +18,7 @@ router = APIRouter(prefix="/organizations/{org_id}/policies", tags=["policies"])
 
 @router.get("", response_model=PaginatedResponse)
 async def list_policies(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     status: str | None = None,
@@ -38,39 +39,44 @@ async def list_policies(
 
 @router.post("", response_model=PolicyResponse, status_code=201)
 async def create_policy(
-    org_id: UUID, data: PolicyCreate, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, data: PolicyCreate, db: DB, current_user: ComplianceUser
 ):
-    return await policy_service.create_policy(db, org_id, data)
+    item = await policy_service.create_policy(db, org_id, data)
+    await log_audit(db, current_user, "create", "policy", str(item.id), org_id)
+    return item
 
 
 @router.get("/stats", response_model=PolicyStatsResponse)
-async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_stats(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     return await policy_service.get_policy_stats(db, org_id)
 
 
 @router.get("/{policy_id}", response_model=PolicyResponse)
 async def get_policy(
-    org_id: UUID, policy_id: UUID, db: DB, current_user: AnyInternalUser
+    org_id: VerifiedOrgId, policy_id: UUID, db: DB, current_user: AnyInternalUser
 ):
     return await policy_service.get_policy(db, org_id, policy_id)
 
 
 @router.patch("/{policy_id}", response_model=PolicyResponse)
 async def update_policy(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     policy_id: UUID,
     data: PolicyUpdate,
     db: DB,
     current_user: ComplianceUser,
 ):
-    return await policy_service.update_policy(db, org_id, policy_id, data)
+    item = await policy_service.update_policy(db, org_id, policy_id, data)
+    await log_audit(db, current_user, "update", "policy", str(policy_id), org_id)
+    return item
 
 
 @router.delete("/{policy_id}", status_code=204)
 async def delete_policy(
-    org_id: UUID, policy_id: UUID, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, policy_id: UUID, db: DB, current_user: ComplianceUser
 ):
     await policy_service.delete_policy(db, org_id, policy_id)
+    await log_audit(db, current_user, "delete", "policy", str(policy_id), org_id)
 
 
 # ---------------------------------------------------------------------------
@@ -80,31 +86,39 @@ async def delete_policy(
 
 @router.post("/{policy_id}/submit-for-review", response_model=PolicyResponse)
 async def submit_for_review(
-    org_id: UUID, policy_id: UUID, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, policy_id: UUID, db: DB, current_user: ComplianceUser
 ):
     """Submit a draft policy for review."""
-    return await policy_service.submit_for_review(db, org_id, policy_id, current_user.id)
+    item = await policy_service.submit_for_review(db, org_id, policy_id, current_user.id)
+    await log_audit(db, current_user, "submit_for_review", "policy", str(policy_id), org_id)
+    return item
 
 
 @router.post("/{policy_id}/approve", response_model=PolicyResponse)
 async def approve_policy(
-    org_id: UUID, policy_id: UUID, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, policy_id: UUID, db: DB, current_user: ComplianceUser
 ):
     """Approve a policy that is in review."""
-    return await policy_service.approve_policy(db, org_id, policy_id, current_user.id)
+    item = await policy_service.approve_policy(db, org_id, policy_id, current_user.id)
+    await log_audit(db, current_user, "approve", "policy", str(policy_id), org_id)
+    return item
 
 
 @router.post("/{policy_id}/publish", response_model=PolicyResponse)
 async def publish_policy(
-    org_id: UUID, policy_id: UUID, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, policy_id: UUID, db: DB, current_user: ComplianceUser
 ):
     """Publish an approved policy."""
-    return await policy_service.publish_policy(db, org_id, policy_id, current_user.id)
+    item = await policy_service.publish_policy(db, org_id, policy_id, current_user.id)
+    await log_audit(db, current_user, "publish", "policy", str(policy_id), org_id)
+    return item
 
 
 @router.post("/{policy_id}/archive", response_model=PolicyResponse)
 async def archive_policy(
-    org_id: UUID, policy_id: UUID, db: DB, current_user: ComplianceUser
+    org_id: VerifiedOrgId, policy_id: UUID, db: DB, current_user: ComplianceUser
 ):
     """Archive a policy."""
-    return await policy_service.archive_policy(db, org_id, policy_id)
+    item = await policy_service.archive_policy(db, org_id, policy_id)
+    await log_audit(db, current_user, "archive", "policy", str(policy_id), org_id)
+    return item

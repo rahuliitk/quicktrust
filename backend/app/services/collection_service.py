@@ -47,10 +47,20 @@ async def trigger_collection(
         await db.refresh(job)
         return job
 
+    # Build credentials dict from the integration's stored reference
+    credentials = None
+    if integration.credentials_ref:
+        # credentials_ref can be a JSON string or a vault reference
+        import json
+        try:
+            credentials = json.loads(integration.credentials_ref)
+        except (json.JSONDecodeError, TypeError):
+            credentials = {"ref": integration.credentials_ref}
+
     try:
         result_data = await collector.collect(
             config=integration.config or {},
-            credentials=None,
+            credentials=credentials,
         )
         job.result_data = result_data
         job.status = "completed"

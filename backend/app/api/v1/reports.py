@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 from fastapi.responses import RedirectResponse
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.core.exceptions import BadRequestError
 from app.schemas.common import PaginatedResponse
 from app.schemas.report import ReportCreate, ReportResponse, ReportStatsResponse
@@ -17,7 +17,7 @@ router = APIRouter(
 
 @router.get("", response_model=PaginatedResponse)
 async def list_reports(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     report_type: str | None = None,
@@ -38,27 +38,27 @@ async def list_reports(
 
 
 @router.post("", response_model=ReportResponse, status_code=201)
-async def create_report(org_id: UUID, data: ReportCreate, db: DB, current_user: ComplianceUser):
+async def create_report(org_id: VerifiedOrgId, data: ReportCreate, db: DB, current_user: ComplianceUser):
     return await report_service.create_report(db, org_id, data, requested_by_id=current_user.id)
 
 
 @router.get("/stats", response_model=ReportStatsResponse)
-async def get_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_stats(org_id: VerifiedOrgId, db: DB, current_user: AnyInternalUser):
     return await report_service.get_report_stats(db, org_id)
 
 
 @router.get("/{report_id}", response_model=ReportResponse)
-async def get_report(org_id: UUID, report_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_report(org_id: VerifiedOrgId, report_id: UUID, db: DB, current_user: AnyInternalUser):
     return await report_service.get_report(db, org_id, report_id)
 
 
 @router.delete("/{report_id}", status_code=204)
-async def delete_report(org_id: UUID, report_id: UUID, db: DB, current_user: ComplianceUser):
+async def delete_report(org_id: VerifiedOrgId, report_id: UUID, db: DB, current_user: ComplianceUser):
     await report_service.delete_report(db, org_id, report_id)
 
 
 @router.get("/{report_id}/download")
-async def download_report(org_id: UUID, report_id: UUID, db: DB, current_user: AnyInternalUser):
+async def download_report(org_id: VerifiedOrgId, report_id: UUID, db: DB, current_user: AnyInternalUser):
     """Download a rendered report file (PDF/CSV) via presigned URL redirect."""
     from app.core.storage import get_presigned_url
 
@@ -85,5 +85,5 @@ async def download_report(org_id: UUID, report_id: UUID, db: DB, current_user: A
 
 
 @router.get("/{report_id}/data")
-async def get_report_data(org_id: UUID, report_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_report_data(org_id: VerifiedOrgId, report_id: UUID, db: DB, current_user: AnyInternalUser):
     return await report_service.generate_report_data(db, org_id, report_id)

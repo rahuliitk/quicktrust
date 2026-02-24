@@ -223,10 +223,46 @@ async def _send_slack(db: AsyncSession, org_id: UUID, notification: Notification
 
 
 async def _send_email(notification: Notification) -> None:
-    """Placeholder email sender — logs the notification for now."""
-    logger.info(
-        "EMAIL notification [%s]: %s — %s",
-        notification.severity,
-        notification.title,
-        notification.message,
-    )
+    """Send email notification via SMTP. Falls back to logging when SMTP is not configured."""
+    from app.config import get_settings
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    settings = get_settings()
+    if not settings.SMTP_HOST:
+        logger.info(
+            "EMAIL notification [%s]: %s — %s (SMTP not configured)",
+            notification.severity,
+            notification.title,
+            notification.message,
+        )
+        return
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"[{notification.severity.upper()}] {notification.title}"
+        msg["From"] = settings.SMTP_FROM_EMAIL
+        msg["To"] = settings.SMTP_FROM_EMAIL  # default; per-user routing can be added
+
+        body = f"""
+        <h2>{notification.title}</h2>
+        <p>{notification.message}</p>
+        <p><small>Severity: {notification.severity} | Category: {notification.category}</small></p>
+        """
+        msg.attach(MIMEText(body, "html"))
+
+        if settings.SMTP_USE_TLS:
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
+            server.starttls()
+        else:
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
+
+        if settings.SMTP_USER:
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+
+        server.sendmail(settings.SMTP_FROM_EMAIL, [msg["To"]], msg.as_string())
+        server.quit()
+        logger.info("Email sent for notification %s", notification.id)
+    except Exception as exc:
+        logger.warning("Failed to send email notification: %s", exc)

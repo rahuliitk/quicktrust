@@ -174,6 +174,33 @@ export function useEvidence(orgId: string, params?: { control_id?: string; page?
   });
 }
 
+// Evidence Upload
+export function useUploadEvidence(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ evidenceId, file }: { evidenceId: string; file: File }) =>
+      api.upload<Evidence>(
+        `/organizations/${orgId}/evidence/${evidenceId}/upload`,
+        file
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["evidence", orgId] });
+    },
+  });
+}
+
+// Evidence Create
+export function useCreateEvidence(orgId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { title: string; status?: string; collection_method?: string; control_id?: string }) =>
+      api.post<Evidence>(`/organizations/${orgId}/evidence`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["evidence", orgId] });
+    },
+  });
+}
+
 // Agent Runs
 export function useAgentRuns(orgId: string) {
   return useQuery({

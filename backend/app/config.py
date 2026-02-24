@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     LITELLM_MODEL: str = "gpt-4o-mini"
     OPENAI_API_KEY: str = ""
 
+    # SMTP email
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "notifications@quicktrust.dev"
+    SMTP_USE_TLS: bool = True
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]

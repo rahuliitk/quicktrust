@@ -4,7 +4,8 @@ from uuid import UUID
 from fastapi import APIRouter, Query, UploadFile, File
 from fastapi.responses import RedirectResponse
 
-from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
+from app.core.audit_middleware import log_audit
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser, VerifiedOrgId
 from app.core.exceptions import BadRequestError
 from app.schemas.common import PaginatedResponse
 from app.schemas.evidence import EvidenceCreate, EvidenceResponse
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/organizations/{org_id}/evidence", tags=["evidence"])
 
 @router.get("", response_model=PaginatedResponse)
 async def list_evidence(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     db: DB,
     current_user: AnyInternalUser,
     control_id: UUID | None = None,
@@ -35,18 +36,20 @@ async def list_evidence(
 
 
 @router.post("", response_model=EvidenceResponse, status_code=201)
-async def create_evidence(org_id: UUID, data: EvidenceCreate, db: DB, current_user: ComplianceUser):
-    return await evidence_service.create_evidence(db, org_id, data)
+async def create_evidence(org_id: VerifiedOrgId, data: EvidenceCreate, db: DB, current_user: ComplianceUser):
+    item = await evidence_service.create_evidence(db, org_id, data)
+    await log_audit(db, current_user, "create", "evidence", str(item.id), org_id)
+    return item
 
 
 @router.get("/{evidence_id}", response_model=EvidenceResponse)
-async def get_evidence(org_id: UUID, evidence_id: UUID, db: DB, current_user: AnyInternalUser):
+async def get_evidence(org_id: VerifiedOrgId, evidence_id: UUID, db: DB, current_user: AnyInternalUser):
     return await evidence_service.get_evidence(db, org_id, evidence_id)
 
 
 @router.post("/{evidence_id}/upload", response_model=EvidenceResponse)
 async def upload_evidence_file(
-    org_id: UUID,
+    org_id: VerifiedOrgId,
     evidence_id: UUID,
     db: DB,
     current_user: ComplianceUser,
@@ -83,12 +86,13 @@ async def upload_evidence_file(
     await db.commit()
     await db.refresh(evidence)
 
+    await log_audit(db, current_user, "upload_file", "evidence", str(evidence_id), org_id)
     return evidence
 
 
 @router.get("/{evidence_id}/download")
 async def download_evidence_file(
-    org_id: UUID, evidence_id: UUID, db: DB, current_user: AnyInternalUser
+    org_id: VerifiedOrgId, evidence_id: UUID, db: DB, current_user: AnyInternalUser
 ):
     """Download an evidence file via presigned URL redirect."""
     from app.core.storage import get_presigned_url
