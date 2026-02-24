@@ -71,3 +71,21 @@ async def client():
 async def db():
     async with test_session() as session:
         yield session
+
+
+@pytest_asyncio.fixture
+async def test_org(client):
+    resp = await client.post("/api/v1/organizations", json={"name": "Test Org", "slug": "test-org-shared"})
+    return resp.json()["id"]
+
+
+def make_test_user_with_role(role: str) -> User:
+    return User(
+        id=uuid.uuid4(),
+        org_id=uuid.uuid4(),
+        keycloak_id=f"test-{role}-id",
+        email=f"{role}@quicktrust.dev",
+        full_name=f"Test {role.title()}",
+        role=role,
+        is_active=True,
+    )

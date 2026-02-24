@@ -1,9 +1,10 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import BadRequestError, NotFoundError
 from app.models.policy import Policy
 from app.models.policy_template import PolicyTemplate
 from app.schemas.policy import PolicyCreate, PolicyUpdate, PolicyStatsResponse
@@ -116,3 +117,66 @@ async def get_policy_template(db: AsyncSession, template_id: UUID) -> PolicyTemp
     if not template:
         raise NotFoundError(f"Policy template {template_id} not found")
     return template
+
+
+# ---------------------------------------------------------------------------
+# Policy workflow transitions
+# ---------------------------------------------------------------------------
+
+async def submit_for_review(
+    db: AsyncSession, org_id: UUID, policy_id: UUID, user_id: UUID
+) -> Policy:
+    """Transition a policy from 'draft' to 'in_review'."""
+    policy = await get_policy(db, org_id, policy_id)
+    if policy.status != "draft":
+        raise BadRequestError(
+            f"Cannot submit for review: policy is '{policy.status}', expected 'draft'."
+        )
+    policy.status = "in_review"
+    await db.commit()
+    await db.refresh(policy)
+    return policy
+
+
+async def approve_policy(
+    db: AsyncSession, org_id: UUID, policy_id: UUID, user_id: UUID
+) -> Policy:
+    """Transition a policy from 'in_review' to 'approved'."""
+    policy = await get_policy(db, org_id, policy_id)
+    if policy.status != "in_review":
+        raise BadRequestError(
+            f"Cannot approve: policy is '{policy.status}', expected 'in_review'."
+        )
+    policy.status = "approved"
+    policy.approved_by_id = user_id
+    policy.approved_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(policy)
+    return policy
+
+
+async def publish_policy(
+    db: AsyncSession, org_id: UUID, policy_id: UUID, user_id: UUID
+) -> Policy:
+    """Transition a policy from 'approved' to 'published'."""
+    policy = await get_policy(db, org_id, policy_id)
+    if policy.status != "approved":
+        raise BadRequestError(
+            f"Cannot publish: policy is '{policy.status}', expected 'approved'."
+        )
+    policy.status = "published"
+    policy.published_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(policy)
+    return policy
+
+
+async def archive_policy(
+    db: AsyncSession, org_id: UUID, policy_id: UUID
+) -> Policy:
+    """Archive a policy (any current status)."""
+    policy = await get_policy(db, org_id, policy_id)
+    policy.status = "archived"
+    await db.commit()
+    await db.refresh(policy)
+    return policy

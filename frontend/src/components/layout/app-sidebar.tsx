@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth-provider";
 import {
   LayoutDashboard,
   Shield,
@@ -26,11 +27,17 @@ import {
   Settings,
 } from "lucide-react";
 
+// Role constants matching backend
+const ADMIN_ROLES = ["super_admin", "admin"];
+const COMPLIANCE_ROLES = ["super_admin", "admin", "compliance_manager"];
+const INTERNAL_ROLES = ["super_admin", "admin", "compliance_manager", "control_owner", "employee", "executive", "auditor_internal"];
+
 interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   section: string;
+  allowedRoles?: string[];
 }
 
 const navItems: NavItem[] = [
@@ -56,20 +63,29 @@ const navItems: NavItem[] = [
   { href: "/audits", label: "Audits", icon: ClipboardCheck, section: "Trust" },
   // Insights
   { href: "/reports", label: "Reports", icon: BarChart3, section: "Insights" },
-  { href: "/integrations", label: "Integrations", icon: Plug, section: "Insights" },
+  { href: "/integrations", label: "Integrations", icon: Plug, section: "Insights", allowedRoles: COMPLIANCE_ROLES },
   // Config
-  { href: "/control-templates", label: "Templates", icon: FileStack, section: "Config" },
-  { href: "/agents/controls-generation", label: "AI Agents", icon: Bot, section: "Config" },
-  { href: "/settings", label: "Settings", icon: Settings, section: "Config" },
+  { href: "/control-templates", label: "Templates", icon: FileStack, section: "Config", allowedRoles: COMPLIANCE_ROLES },
+  { href: "/agents", label: "AI Agents", icon: Bot, section: "Config", allowedRoles: COMPLIANCE_ROLES },
+  { href: "/settings", label: "Settings", icon: Settings, section: "Config", allowedRoles: ADMIN_ROLES },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { userInfo } = useAuth();
+  const userRole = userInfo?.role;
+
+  // Filter nav items based on user role
+  const filteredItems = navItems.filter((item) => {
+    if (!item.allowedRoles) return true; // No restriction
+    if (!userRole) return true; // Dev mode fallback: show all
+    return item.allowedRoles.includes(userRole);
+  });
 
   // Group items by section
   const sections: { name: string; items: NavItem[] }[] = [];
   let currentSection = "";
-  for (const item of navItems) {
+  for (const item of filteredItems) {
     if (item.section !== currentSection) {
       currentSection = item.section;
       sections.push({ name: currentSection, items: [] });
@@ -93,7 +109,7 @@ export function AppSidebar() {
             </div>
             <div className="space-y-0.5">
               {section.items.map((item) => {
-                const isActive = pathname.startsWith(item.href);
+                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link
                     key={item.href}
@@ -115,7 +131,7 @@ export function AppSidebar() {
         ))}
       </nav>
       <div className="border-t p-4 text-xs text-muted-foreground">
-        QuickTrust v0.3.0
+        QuickTrust v0.4.0
       </div>
     </aside>
   );

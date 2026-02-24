@@ -25,6 +25,7 @@ from app.api.v1 import (
     questionnaires,
     trust_center,
     reports,
+    files,
 )
 
 api_router = APIRouter()
@@ -53,4 +54,5 @@ api_router.include_router(monitoring.router)
 api_router.include_router(questionnaires.router)
 api_router.include_router(trust_center.router)
 api_router.include_router(reports.router)
+api_router.include_router(files.router)
 api_router.include_router(trust_center.public_router)

@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from sqlalchemy import select, func
@@ -11,6 +12,8 @@ from app.schemas.questionnaire import (
     QuestionnaireCreate, QuestionnaireUpdate,
     QuestionResponseCreate, QuestionResponseUpdate,
 )
+
+logger = logging.getLogger(__name__)
 
 
 async def list_questionnaires(
@@ -156,7 +159,10 @@ async def update_response(
 # === Auto-Fill ===
 
 async def auto_fill(db: AsyncSession, org_id: UUID, questionnaire_id: UUID) -> int:
-    """Scan question text for keyword matches against control/policy titles. Returns count of filled answers."""
+    """Auto-fill questionnaire using keyword matching (first pass) then LLM (second pass).
+
+    Returns total count of filled answers across both passes.
+    """
     questionnaire = await get_questionnaire(db, org_id, questionnaire_id)
     questions = questionnaire.questions or []
 
@@ -168,6 +174,9 @@ async def auto_fill(db: AsyncSession, org_id: UUID, questionnaire_id: UUID) -> i
     policies = list(policies_result.scalars().all())
 
     filled = 0
+    unanswered_questions: list[dict] = []  # questions not matched by keywords
+
+    # ---- Pass 1: keyword matching (existing logic) ----
     for idx, q in enumerate(questions):
         q_id = q.get("id", f"q_{idx}")
         q_text = q.get("text", q.get("question", "")).lower()
@@ -220,14 +229,149 @@ async def auto_fill(db: AsyncSession, org_id: UUID, questionnaire_id: UUID) -> i
             )
             db.add(response)
             filled += 1
+        else:
+            # Track for LLM pass
+            unanswered_questions.append({
+                "id": q_id,
+                "text": q.get("text", q.get("question", "")),
+            })
 
+    # Commit keyword-matched answers before LLM pass
     if filled > 0:
         questionnaire.answered_count += filled
         if questionnaire.status == "draft":
             questionnaire.status = "in_progress"
         await db.commit()
 
+    # ---- Pass 2: LLM-enhanced auto-fill for remaining questions ----
+    if unanswered_questions:
+        llm_filled = await _llm_auto_fill(
+            db=db,
+            org_id=org_id,
+            questionnaire_id=questionnaire_id,
+            questionnaire=questionnaire,
+            unanswered=unanswered_questions,
+            controls=controls,
+            policies=policies,
+        )
+        filled += llm_filled
+
     return filled
+
+
+async def _llm_auto_fill(
+    db: AsyncSession,
+    org_id: UUID,
+    questionnaire_id: UUID,
+    questionnaire: Questionnaire,
+    unanswered: list[dict],
+    controls: list,
+    policies: list,
+) -> int:
+    """Send unanswered questions to LLM with controls/policies as context.
+
+    Returns count of answers filled by the LLM. Falls back gracefully on error.
+    """
+    try:
+        from app.agents.common.llm import call_llm_json
+        from app.services.questionnaire_prompts import (
+            SYSTEM_PROMPT,
+            build_auto_fill_user_prompt,
+        )
+    except ImportError:
+        logger.warning("LLM module not available; skipping LLM auto-fill pass.")
+        return 0
+
+    # Build context strings
+    controls_context = "\n".join(
+        f"- {ctrl.title} (status: {ctrl.status})"
+        + (f" — {ctrl.description[:200]}" if getattr(ctrl, "description", None) else "")
+        for ctrl in controls
+    ) or "(no controls defined)"
+
+    policies_context = "\n".join(
+        f"- {pol.title} (status: {pol.status})"
+        + (f" — {pol.description[:200]}" if getattr(pol, "description", None) else "")
+        for pol in policies
+    ) or "(no policies defined)"
+
+    # Batch questions (max 20 per LLM call to stay within token limits)
+    BATCH_SIZE = 20
+    total_filled = 0
+
+    for batch_start in range(0, len(unanswered), BATCH_SIZE):
+        batch = unanswered[batch_start : batch_start + BATCH_SIZE]
+
+        user_prompt = build_auto_fill_user_prompt(
+            questions=batch,
+            controls_context=controls_context,
+            policies_context=policies_context,
+        )
+
+        try:
+            llm_result = await call_llm_json(
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.1,
+                max_tokens=4096,
+            )
+        except Exception as exc:
+            logger.warning(
+                "LLM auto-fill call failed for batch starting at %d: %s",
+                batch_start,
+                exc,
+            )
+            continue  # Skip this batch; keyword results are still saved
+
+        answers = llm_result.get("answers", [])
+        batch_filled = 0
+
+        for ans in answers:
+            q_id = ans.get("question_id")
+            answer_text = ans.get("answer", "")
+            confidence = ans.get("confidence", 0.0)
+            source_refs = ans.get("source_references", "")
+
+            if not q_id or not answer_text:
+                continue
+
+            # Skip very low confidence answers (LLM said it cannot answer)
+            if confidence < 0.1:
+                continue
+
+            # Find original question text
+            original_q = next((q for q in batch if q["id"] == q_id), None)
+            if not original_q:
+                continue
+
+            response = QuestionnaireResponse(
+                questionnaire_id=questionnaire_id,
+                org_id=org_id,
+                question_id=q_id,
+                question_text=original_q["text"],
+                answer=answer_text,
+                confidence=confidence,
+                source_type="llm",
+                source_id=None,
+            )
+            db.add(response)
+            batch_filled += 1
+
+        if batch_filled > 0:
+            questionnaire.answered_count += batch_filled
+            if questionnaire.status == "draft":
+                questionnaire.status = "in_progress"
+            await db.commit()
+            total_filled += batch_filled
+
+    logger.info(
+        "LLM auto-fill completed for questionnaire %s: %d answers generated",
+        questionnaire_id,
+        total_filled,
+    )
+    return total_filled
 
 
 # === Stats ===

@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
 from app.schemas.common import PaginatedResponse
 from app.schemas.training import (
     TrainingCourseCreate,
@@ -27,7 +27,7 @@ router = APIRouter(
 async def list_courses(
     org_id: UUID,
     db: DB,
-    current_user: CurrentUser,
+    current_user: AnyInternalUser,
     is_active: bool | None = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
@@ -45,24 +45,24 @@ async def list_courses(
 
 
 @router.post("/courses", response_model=TrainingCourseResponse, status_code=201)
-async def create_course(org_id: UUID, data: TrainingCourseCreate, db: DB, current_user: CurrentUser):
+async def create_course(org_id: UUID, data: TrainingCourseCreate, db: DB, current_user: ComplianceUser):
     return await training_service.create_course(db, org_id, data)
 
 
 @router.get("/courses/{course_id}", response_model=TrainingCourseResponse)
-async def get_course(org_id: UUID, course_id: UUID, db: DB, current_user: CurrentUser):
+async def get_course(org_id: UUID, course_id: UUID, db: DB, current_user: AnyInternalUser):
     return await training_service.get_course(db, org_id, course_id)
 
 
 @router.patch("/courses/{course_id}", response_model=TrainingCourseResponse)
 async def update_course(
-    org_id: UUID, course_id: UUID, data: TrainingCourseUpdate, db: DB, current_user: CurrentUser
+    org_id: UUID, course_id: UUID, data: TrainingCourseUpdate, db: DB, current_user: ComplianceUser
 ):
     return await training_service.update_course(db, org_id, course_id, data)
 
 
 @router.delete("/courses/{course_id}", status_code=204)
-async def delete_course(org_id: UUID, course_id: UUID, db: DB, current_user: CurrentUser):
+async def delete_course(org_id: UUID, course_id: UUID, db: DB, current_user: ComplianceUser):
     await training_service.delete_course(db, org_id, course_id)
 
 
@@ -72,7 +72,7 @@ async def delete_course(org_id: UUID, course_id: UUID, db: DB, current_user: Cur
 async def list_assignments(
     org_id: UUID,
     db: DB,
-    current_user: CurrentUser,
+    current_user: AnyInternalUser,
     course_id: UUID | None = None,
     status: str | None = None,
     page: int = Query(1, ge=1),
@@ -91,12 +91,12 @@ async def list_assignments(
 
 
 @router.post("/assignments", response_model=TrainingAssignmentResponse, status_code=201)
-async def create_assignment(org_id: UUID, data: TrainingAssignmentCreate, db: DB, current_user: CurrentUser):
+async def create_assignment(org_id: UUID, data: TrainingAssignmentCreate, db: DB, current_user: ComplianceUser):
     return await training_service.create_assignment(db, org_id, data, assigned_by_id=current_user.id)
 
 
 @router.get("/assignments/stats", response_model=TrainingStatsResponse)
-async def get_training_stats(org_id: UUID, db: DB, current_user: CurrentUser):
+async def get_training_stats(org_id: UUID, db: DB, current_user: AnyInternalUser):
     return await training_service.get_training_stats(db, org_id)
 
 

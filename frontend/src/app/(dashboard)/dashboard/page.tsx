@@ -12,10 +12,15 @@ import {
   usePolicyStats,
   useRiskStats,
   useLatestOnboarding,
+  useIncidentStats,
+  useVendorStats,
+  useTrainingStats,
+  useMonitoringStats,
+  useAccessReviewStats,
 } from "@/hooks/use-api";
 import { useOrgId } from "@/hooks/use-org-id";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, ListChecks, Bot, CheckCircle, FileText, AlertTriangle, Rocket } from "lucide-react";
+import { Shield, ListChecks, Bot, CheckCircle, FileText, AlertTriangle, Rocket, AlertCircle, Building2, GraduationCap, Activity, UserCheck } from "lucide-react";
 
 export default function DashboardPage() {
   const orgId = useOrgId();
@@ -25,6 +30,11 @@ export default function DashboardPage() {
   const { data: policyStats, isLoading: policyLoading, error: policyError } = usePolicyStats(orgId);
   const { data: riskStats, isLoading: riskLoading, error: riskError } = useRiskStats(orgId);
   const { data: latestOnboarding } = useLatestOnboarding(orgId);
+  const { data: incidentStats, isLoading: incidentLoading } = useIncidentStats(orgId);
+  const { data: vendorStats, isLoading: vendorLoading } = useVendorStats(orgId);
+  const { data: trainingStats, isLoading: trainingLoading } = useTrainingStats(orgId);
+  const { data: monitoringStats, isLoading: monitoringLoading } = useMonitoringStats(orgId);
+  const { data: accessReviewStats, isLoading: accessReviewLoading } = useAccessReviewStats(orgId);
 
   const complianceScore = stats
     ? stats.total > 0
@@ -191,6 +201,112 @@ export default function DashboardPage() {
                 <Skeleton className="h-8 w-8" />
               ) : (
                 <div className="text-2xl font-bold">{agentRuns?.total || 0}</div>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Operations & People metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Link href="/incidents">
+          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Open Incidents</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {incidentLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{incidentStats?.by_status?.open || 0}</div>
+                  {incidentStats && incidentStats.open_p1_count > 0 && (
+                    <Badge variant="destructive" className="mt-1">
+                      {incidentStats.open_p1_count} P1/P2
+                    </Badge>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/vendors">
+          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Vendor Risk</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {vendorLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{vendorStats?.total || 0}</div>
+                  {vendorStats && (vendorStats.by_risk_tier?.critical || 0) > 0 && (
+                    <p className="text-xs text-red-500">
+                      {vendorStats.by_risk_tier.critical} critical
+                    </p>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/training">
+          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Training</CardTitle>
+              <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {trainingLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{trainingStats?.completion_rate_pct || 0}%</div>
+                  <p className="text-xs text-muted-foreground">completion rate</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/monitoring">
+          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monitoring</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {monitoringLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{monitoringStats?.open_alerts || 0}</div>
+                  <p className="text-xs text-muted-foreground">open alerts</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/access-reviews">
+          <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Access Reviews</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {accessReviewLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold">{accessReviewStats?.pending_decisions || 0}</div>
+                  <p className="text-xs text-muted-foreground">pending</p>
+                </>
               )}
             </CardContent>
           </Card>

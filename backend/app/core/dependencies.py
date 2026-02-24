@@ -73,3 +73,80 @@ def require_role(*roles: str):
 # Type aliases for dependency injection
 DB = Annotated[AsyncSession, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+# ---------------------------------------------------------------------------
+# Role constants
+# ---------------------------------------------------------------------------
+SUPER_ADMIN = "super_admin"
+ADMIN = "admin"
+COMPLIANCE_MANAGER = "compliance_manager"
+CONTROL_OWNER = "control_owner"
+EMPLOYEE = "employee"
+EXECUTIVE = "executive"
+AUDITOR_INTERNAL = "auditor_internal"
+AUDITOR_EXTERNAL = "auditor_external"
+
+ALL_ROLES = (
+    SUPER_ADMIN,
+    ADMIN,
+    COMPLIANCE_MANAGER,
+    CONTROL_OWNER,
+    EMPLOYEE,
+    EXECUTIVE,
+    AUDITOR_INTERNAL,
+    AUDITOR_EXTERNAL,
+)
+
+# Internal roles (everyone except external auditors)
+INTERNAL_ROLES = (
+    SUPER_ADMIN,
+    ADMIN,
+    COMPLIANCE_MANAGER,
+    CONTROL_OWNER,
+    EMPLOYEE,
+    EXECUTIVE,
+    AUDITOR_INTERNAL,
+)
+
+
+# ---------------------------------------------------------------------------
+# RoleChecker – reusable FastAPI dependency
+# ---------------------------------------------------------------------------
+class RoleChecker:
+    """FastAPI dependency that enforces role-based access control.
+
+    Usage as a dependency:
+        @router.get("/admin-only", dependencies=[Depends(RoleChecker(ADMIN, SUPER_ADMIN))])
+
+    Or via Annotated type alias:
+        async def endpoint(user: AdminUser): ...
+    """
+
+    def __init__(self, *allowed_roles: str) -> None:
+        self.allowed_roles: set[str] = set(allowed_roles)
+
+    async def __call__(
+        self,
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        # Super admins always pass
+        if current_user.role == SUPER_ADMIN:
+            return current_user
+
+        if current_user.role not in self.allowed_roles:
+            raise ForbiddenError(
+                f"Role '{current_user.role}' does not have access. "
+                f"Required: {', '.join(sorted(self.allowed_roles))}"
+            )
+        return current_user
+
+
+# ---------------------------------------------------------------------------
+# Convenience type aliases for common role checks
+# ---------------------------------------------------------------------------
+AdminUser = Annotated[User, Depends(RoleChecker(SUPER_ADMIN, ADMIN))]
+ComplianceUser = Annotated[
+    User, Depends(RoleChecker(SUPER_ADMIN, ADMIN, COMPLIANCE_MANAGER))
+]
+AnyInternalUser = Annotated[User, Depends(RoleChecker(*INTERNAL_ROLES))]

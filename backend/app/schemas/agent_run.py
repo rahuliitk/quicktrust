@@ -9,6 +9,14 @@ class AgentRunTrigger(BaseModel):
     company_context: dict | None = None
 
 
+class AgentRunTriggerGeneric(BaseModel):
+    """Generic trigger for agents that accept flexible input."""
+    framework_id: UUID | None = None
+    audit_id: UUID | None = None
+    vendor_id: UUID | None = None
+    company_context: dict | None = None
+
+
 class AgentRunResponse(BaseModel):
     id: UUID
     org_id: UUID

@@ -26,6 +26,8 @@ class EvidenceResponse(BaseModel):
     expires_at: datetime | None
     artifact_url: str | None
     artifact_hash: str | None
+    file_url: str | None = None
+    file_name: str | None = None
     data: dict | None
     collection_method: str
     collector: str | None

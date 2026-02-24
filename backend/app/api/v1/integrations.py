@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.core.dependencies import DB, CurrentUser
+from app.core.dependencies import DB, CurrentUser, AnyInternalUser, ComplianceUser
 from app.schemas.common import PaginatedResponse
 from app.schemas.integration import (
     IntegrationCreate,
@@ -42,13 +42,13 @@ PROVIDERS = [
 
 
 @router.get("/providers", response_model=list[ProviderInfo])
-async def list_providers(org_id: UUID, db: DB, current_user: CurrentUser):
+async def list_providers(org_id: UUID, db: DB, current_user: AnyInternalUser):
     return PROVIDERS
 
 
 @router.get("", response_model=PaginatedResponse)
 async def list_integrations(
-    org_id: UUID, db: DB, current_user: CurrentUser,
+    org_id: UUID, db: DB, current_user: AnyInternalUser,
     page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=100),
 ):
     items, total = await integration_service.list_integrations(db, org_id, page, page_size)
@@ -61,14 +61,14 @@ async def list_integrations(
 
 @router.post("", response_model=IntegrationResponse, status_code=201)
 async def create_integration(
-    org_id: UUID, data: IntegrationCreate, db: DB, current_user: CurrentUser
+    org_id: UUID, data: IntegrationCreate, db: DB, current_user: ComplianceUser
 ):
     return await integration_service.create_integration(db, org_id, data)
 
 
 @router.get("/{integration_id}", response_model=IntegrationResponse)
 async def get_integration(
-    org_id: UUID, integration_id: UUID, db: DB, current_user: CurrentUser
+    org_id: UUID, integration_id: UUID, db: DB, current_user: AnyInternalUser
 ):
     return await integration_service.get_integration(db, org_id, integration_id)
 
@@ -76,21 +76,21 @@ async def get_integration(
 @router.patch("/{integration_id}", response_model=IntegrationResponse)
 async def update_integration(
     org_id: UUID, integration_id: UUID, data: IntegrationUpdate,
-    db: DB, current_user: CurrentUser,
+    db: DB, current_user: ComplianceUser,
 ):
     return await integration_service.update_integration(db, org_id, integration_id, data)
 
 
 @router.delete("/{integration_id}", status_code=204)
 async def delete_integration(
-    org_id: UUID, integration_id: UUID, db: DB, current_user: CurrentUser
+    org_id: UUID, integration_id: UUID, db: DB, current_user: ComplianceUser
 ):
     await integration_service.delete_integration(db, org_id, integration_id)
 
 
 @router.post("/{integration_id}/test")
 async def test_integration(
-    org_id: UUID, integration_id: UUID, db: DB, current_user: CurrentUser
+    org_id: UUID, integration_id: UUID, db: DB, current_user: ComplianceUser
 ):
     integration = await integration_service.get_integration(db, org_id, integration_id)
     return {"status": "ok", "provider": integration.provider, "message": "Connection test successful"}
@@ -99,14 +99,14 @@ async def test_integration(
 @router.post("/{integration_id}/collect", response_model=CollectionJobResponse)
 async def trigger_collection(
     org_id: UUID, integration_id: UUID, data: CollectionTrigger,
-    db: DB, current_user: CurrentUser,
+    db: DB, current_user: ComplianceUser,
 ):
     return await collection_service.trigger_collection(db, org_id, integration_id, data)
 
 
 @router.get("/{integration_id}/jobs", response_model=PaginatedResponse)
 async def list_collection_jobs(
-    org_id: UUID, integration_id: UUID, db: DB, current_user: CurrentUser,
+    org_id: UUID, integration_id: UUID, db: DB, current_user: AnyInternalUser,
     page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=100),
 ):
     items, total = await collection_service.list_collection_jobs(
