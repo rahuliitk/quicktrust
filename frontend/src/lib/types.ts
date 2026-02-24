@@ -797,3 +797,123 @@ export interface RequirementCreate {
   title: string;
   description?: string;
 }
+
+// Notifications
+
+export interface Notification {
+  id: string;
+  org_id: string;
+  user_id: string | null;
+  channel: string;
+  category: string;
+  title: string;
+  message: string;
+  severity: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  is_read: boolean;
+  read_at: string | null;
+  sent_at: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationStats {
+  total: number;
+  unread: number;
+  by_category: Record<string, number>;
+  by_severity: Record<string, number>;
+}
+
+// Audit Logs
+
+export interface AuditLogEntry {
+  id: string;
+  org_id: string;
+  actor_type: string;
+  actor_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  changes: Record<string, unknown> | null;
+  ip_address: string | null;
+  timestamp: string;
+}
+
+export interface AuditLogStats {
+  total: number;
+  by_action: Record<string, number>;
+  by_entity_type: Record<string, number>;
+}
+
+// Auditor Marketplace
+
+export interface AuditorProfile {
+  id: string;
+  user_id: string;
+  firm_name: string | null;
+  bio: string | null;
+  credentials: string[] | null;
+  specializations: string[] | null;
+  years_experience: number | null;
+  location: string | null;
+  hourly_rate: number | null;
+  is_verified: boolean;
+  verified_at: string | null;
+  is_public: boolean;
+  rating: number | null;
+  total_audits: number;
+  website_url: string | null;
+  linkedin_url: string | null;
+  user_name: string | null;
+  user_email: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Gap Analysis
+
+export interface GapAnalysis {
+  framework_id: string;
+  total_requirements: number;
+  covered_count: number;
+  partial_count: number;
+  gap_count: number;
+  coverage_percentage: number;
+  covered: GapAnalysisEntry[];
+  partial: GapAnalysisEntry[];
+  gaps: GapAnalysisEntry[];
+}
+
+export interface GapAnalysisEntry {
+  requirement_id: string;
+  code: string;
+  title: string;
+  controls: { id: string; title: string; status: string }[];
+}
+
+export interface CrossFrameworkMatrix {
+  total_controls: number;
+  multi_framework_controls: number;
+  deduplication_opportunity: number;
+  frameworks: FrameworkSummary[];
+  matrix: MatrixRow[];
+}
+
+export interface FrameworkSummary {
+  framework_id: string;
+  framework_name: string;
+  total_requirements: number;
+  mapped_controls: number;
+  implemented_controls: number;
+  coverage_pct: number;
+}
+
+export interface MatrixRow {
+  control_id: string;
+  control_title: string;
+  status: string;
+  framework_ids: string[];
+  framework_count: number;
+}

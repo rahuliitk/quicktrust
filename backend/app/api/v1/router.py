@@ -26,6 +26,12 @@ from app.api.v1 import (
     trust_center,
     reports,
     files,
+    notifications,
+    audit_logs,
+    auditor_marketplace,
+    gap_analysis,
+    tenants,
+    embeddings,
 )
 
 api_router = APIRouter()
@@ -56,3 +62,10 @@ api_router.include_router(trust_center.router)
 api_router.include_router(reports.router)
 api_router.include_router(files.router)
 api_router.include_router(trust_center.public_router)
+# v0.5 additions
+api_router.include_router(notifications.router)
+api_router.include_router(audit_logs.router)
+api_router.include_router(auditor_marketplace.router)
+api_router.include_router(gap_analysis.router)
+api_router.include_router(tenants.router)
+api_router.include_router(embeddings.router)
