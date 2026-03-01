@@ -6,10 +6,16 @@ from fastapi import Depends, Header
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.database import async_session
 from app.core.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
 from app.core.security import decode_token
 from app.models.user import User
+from app.models.organization import Organization
+
+# Dev-mode constants
+DEV_ORG_ID = "00000000-0000-0000-0000-000000000000"
+DEV_USER_ID = "00000000-0000-0000-0000-000000000001"
 
 
 async def get_db():
@@ -20,10 +26,51 @@ async def get_db():
             await session.close()
 
 
+async def _ensure_dev_user(db: AsyncSession) -> User:
+    """Create or return the dev user and org for local development."""
+    result = await db.execute(select(User).where(User.id == DEV_USER_ID))
+    user = result.scalar_one_or_none()
+    if user:
+        return user
+
+    # Ensure dev org exists
+    org_result = await db.execute(select(Organization).where(Organization.id == DEV_ORG_ID))
+    if org_result.scalar_one_or_none() is None:
+        dev_org = Organization(
+            id=DEV_ORG_ID,
+            name="Dev Organization",
+            slug="dev-org",
+            industry="Technology",
+            company_size="1-50",
+        )
+        db.add(dev_org)
+        await db.flush()
+
+    dev_user = User(
+        id=DEV_USER_ID,
+        org_id=DEV_ORG_ID,
+        keycloak_id="dev-admin",
+        email="admin@quicktrust.dev",
+        full_name="Dev Admin",
+        role="super_admin",
+        is_active=True,
+    )
+    db.add(dev_user)
+    await db.commit()
+    return dev_user
+
+
 async def get_current_user(
     authorization: Annotated[str | None, Header()] = None,
     db: AsyncSession = Depends(get_db),
 ) -> User:
+    settings = get_settings()
+
+    # Dev mode bypass: if no auth header and APP_ENV is development, return dev user
+    if settings.APP_ENV == "development":
+        if not authorization or not authorization.startswith("Bearer "):
+            return await _ensure_dev_user(db)
+
     if not authorization or not authorization.startswith("Bearer "):
         raise UnauthorizedError("Missing or invalid authorization header")
 

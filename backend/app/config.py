@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     LOG_LEVEL: str = "INFO"
     SECRET_KEY: str = "change-me-in-production"
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
 
     # Database — defaults to SQLite for local dev, use postgresql+asyncpg://... for production
     DATABASE_URL: str = "sqlite+aiosqlite:///./quicktrust.db"

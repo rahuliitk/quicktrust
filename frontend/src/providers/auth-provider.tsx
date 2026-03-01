@@ -68,6 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return () => clearInterval(interval);
       }
+
+      // Dev mode: Keycloak not available, proceed without auth
+      // Backend dev mode accepts requests without a Bearer token
+      console.info("Keycloak not available — running in dev mode (no auth)");
+      setUserInfo({
+        name: "Dev Admin",
+        email: "admin@quicktrust.dev",
+        roles: ["super_admin"],
+        org_id: "00000000-0000-0000-0000-000000000000",
+      });
+      setAuthenticated(true);
       setLoading(false);
     });
   }, []);

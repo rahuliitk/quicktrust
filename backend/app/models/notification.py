@@ -32,7 +32,7 @@ class Notification(BaseModel):
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    metadata: Mapped[dict | None] = mapped_column(JSONType(), default=dict)
+    extra_data: Mapped[dict | None] = mapped_column(JSONType(), default=dict)
 
     organization = relationship("Organization")
     user = relationship("User")
