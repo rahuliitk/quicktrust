@@ -7,7 +7,7 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { getKeycloak, initKeycloak, login, logout, getToken } from "@/lib/auth";
+import { getKeycloak, initKeycloak, login, logout } from "@/lib/auth";
 import api from "@/lib/api";
 
 interface AuthContextType {
@@ -40,7 +40,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userInfo, setUserInfo] = useState<AuthContextType["userInfo"]>(null);
 
   useEffect(() => {
-    initKeycloak().then((auth) => {
+    // Race Keycloak init against a timeout so we never hang on "Loading..."
+    const timeout = new Promise<boolean>((resolve) =>
+      setTimeout(() => resolve(false), 10000)
+    );
+
+    Promise.race([initKeycloak(), timeout]).then((auth) => {
       setAuthenticated(auth);
       if (auth) {
         const kc = getKeycloak();
@@ -69,16 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => clearInterval(interval);
       }
 
-      // Dev mode: Keycloak not available, proceed without auth
-      // Backend dev mode accepts requests without a Bearer token
-      console.info("Keycloak not available — running in dev mode (no auth)");
-      setUserInfo({
-        name: "Dev Admin",
-        email: "admin@quicktrust.dev",
-        roles: ["super_admin"],
-        org_id: "00000000-0000-0000-0000-000000000000",
-      });
-      setAuthenticated(true);
+      // User is not logged in — stay unauthenticated
       setLoading(false);
     });
   }, []);

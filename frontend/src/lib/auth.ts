@@ -15,6 +15,13 @@ export function getKeycloak(): Keycloak {
   return keycloakInstance;
 }
 
+// Track whether Keycloak is reachable
+let keycloakAvailable = false;
+
+export function isKeycloakAvailable(): boolean {
+  return keycloakAvailable;
+}
+
 export async function initKeycloak(): Promise<boolean> {
   const kc = getKeycloak();
   try {
@@ -26,9 +33,11 @@ export async function initKeycloak(): Promise<boolean> {
           ? `${window.location.origin}/silent-check-sso.html`
           : undefined,
     });
+    keycloakAvailable = true;
     return authenticated;
   } catch (error) {
     console.error("Keycloak init failed:", error);
+    keycloakAvailable = false;
     return false;
   }
 }
